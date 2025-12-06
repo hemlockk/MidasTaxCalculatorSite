@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
 using System.Globalization;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.PathSegments;
+using System.ComponentModel.DataAnnotations;
 namespace MidasTaxCalculatorSite.Pages
 {
     public class IndexModel : PageModel
@@ -25,9 +26,13 @@ namespace MidasTaxCalculatorSite.Pages
         public List<Stock> CreatedStocks { get; set; } = new();
         public class Stock
         {
+            [Required(ErrorMessage = "Lütfen hisse kodunu giriniz.")]
+            [RegularExpression(@"^[A-Za-z]{1,5}$", ErrorMessage = "Hisse kodu yalnızca en fazla 5 harf olmalıdır.")]
             public string StockCode { get; set; }
             public DateTime BuyDate { get; set; }
+            [Range(0.01, double.MaxValue, ErrorMessage = "Hisse miktarı 0'dan büyük olmalıdır.")]
             public decimal BuyAmount { get; set; }
+            [Range(0.01, double.MaxValue, ErrorMessage = "Alım fiyatı 0'dan büyük olmalıdır.")]
             public decimal BuyPrice { get; set; }
             public decimal CurrentPrice { get; set; }
             public decimal Profit { get; set; }

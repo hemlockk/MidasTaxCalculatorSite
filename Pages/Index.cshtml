@@ -1,6 +1,33 @@
 ﻿@page
 @model MidasTaxCalculatorSite.Pages.IndexModel
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<div style="margin-bottom:15px; font-size:15px; line-height:1.5;">
+    <p>
+        ABD borsalarından elde edilen alım satım kazançları, beyana tabi tutulmalıdır.
+        Bu kazançlar Türk Lirası cinsinden hesaplanmalıdır. Dolar/TL dönüşümlerinde,
+        işlem gününden bir önceki günün Türkiye Cumhuriyeti Merkez Bankası kapanış kuru temel alınmalıdır.
+        Alım satım kazancının hesaplanması sırasında endeksleme yöntemini kullanabilmek için
+        Yİ-ÜFE farkının %10 üzerinde olması gerekmektedir.
+    </p>
+
+    <p>
+        Uygulamanın kullanımı için hisse kodunuzu, hisseyi aldığınız tarihi, alınan hisse miktarını ve hisseyi aldığınız tarihteki dolar bazlı fiyatını girmeniz yeterlidir.
+        İstenilen bilgiler eklendikten sonra "Calculate Tax" butonuna tıklayarak vergi hesaplamasını gerçekleştirebilirsiniz. Vergi hesaplamanızda hissenin güncel fiyatı baz alınacaktır.
+        Belirtlen bilgilere Midas uygulamasındali İşlem Geçmişi sekmesinden ulaşabilirsiniz.  
+    </p>
+    <p>
+    Örnek İşlem Geçmişi ekran görüntüsü:
+    </p>
+
+    <p style="color:red; font-weight:bold;">
+        ÖNEMLİ UYARI: Bu uygulama sadece kendi hesaplamanızı karşılaştırmak amacıyla hazırlanmıştır.
+        Hesaplanan değerlerin doğruluğu garanti edilmemektedir.
+    </p>
+</div>
 
 <script>
     function validateWeekend() {
@@ -19,66 +46,146 @@
     }
 </script>
 
-<h2>Add Stock</h2>
+<h2>Hisse Ekle</h2>
 
+<form method="post" class="mt-3">
 
-<form method="post">
+    <div class="row g-3">
 
-    <label>Stock Code</label>
-    <input asp-for="UserInput.StockCode" />
+        <div class="col-md-3">
+            <label class="form-label">Hisse Kodu</label>
+            <input asp-for="UserInput.StockCode"
+                   class="form-control"
+                   maxlength="5"
+                   required
+                   pattern="[A-Za-z]{1,5}" />
+        </div>
 
-    <label>Buy Date</label>
-    <input type="date" asp-for="UserInput.BuyDate" id="buyDate" required />
+        <div class="col-md-3">
+            <label class="form-label">Satın Alım Tarihi</label>
+            <input type="date"
+                   asp-for="UserInput.BuyDate"
+                   class="form-control"
+                   id="buyDate"
+                   required />
+        </div>
 
-    <label>Share Amount</label>
-    <input asp-for="UserInput.BuyAmount" />
+        <div class="col-md-3">
+            <label class="form-label">Hisse Miktarı</label>
+            <input asp-for="UserInput.BuyAmount"
+                   type="number"
+                   class="form-control"
+                   step="0.01"
+                   required"
+                    />
+        </div>
 
-    <label>Buy Price ($)</label>
-    <input asp-for="UserInput.BuyPrice" />
+        <div class="col-md-3">
+            <label class="form-label">Alım Fiyatı ($)</label>
+            <input asp-for="UserInput.BuyPrice"
+                   type="number"
+                   step="0.01"
+                   class="form-control"
+                   required />
+        </div>
 
-    <button type="submit" onclick="return validateWeekend()">Add Stock</button>
+    </div>
+
+    <!-- Validation messages displayed here instead -->
+    <div class="row">
+        <div class="col-md-12 mt-1">
+            <span asp-validation-for="UserInput.StockCode" class="text-danger d-block"></span>
+            <span asp-validation-for="UserInput.BuyDate" class="text-danger d-block"></span>
+            <span asp-validation-for="UserInput.BuyAmount" class="text-danger d-block"></span>
+            <span asp-validation-for="UserInput.BuyPrice" class="text-danger d-block"></span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Hisse Ekle</button>
+
 </form>
 
-@if (Model.CreatedStocks.Count > 0)
-{
-    <h3>Created Stocks:</h3>
-    <ul>
-        @foreach (var s in Model.CreatedStocks)
-        {
-            <li>@s.StockCode — Buy: @s.BuyPrice $ — Buy Date: @s.BuyDate.ToString("dd.MM.yyyy")</li>
-        }
-    </ul>
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            Eklenen Hisseler
+        </div>
 
-    <form method="post" asp-page-handler="CalculateTax">
-        @for (int i = 0; i < Model.CreatedStocks.Count; i++)
-        {
-            <input type="hidden" asp-for="CreatedStocks[i].StockCode" />
-            <input type="hidden" asp-for="CreatedStocks[i].BuyDate" />
-            <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" />
-            <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" />
-            <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" />
-        }
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>Hisse</th>
+                        <th>Alış Fiyatı ($)</th>
+                        <th>Alış Tarihi</th>
+                        <th>Adet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.CreatedStocks.Count; i++)
+                    {
+                        <tr>
+                            <td>@Model.CreatedStocks[i].StockCode</td>
+                            <td>@Model.CreatedStocks[i].BuyPrice.ToString("N2")</td>
+                            <td>@Model.CreatedStocks[i].BuyDate.ToString("dd.MM.yyyy")</td>
+                            <td>@Model.CreatedStocks[i].BuyAmount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-        <button type="submit">Calculate Tax</button>
-    </form>
-    <form method="post" asp-page-handler="Clear" style="margin-top:10px;">
-        <button type="submit" style="background-color:#cc0000; color:white;">Clear All Stocks</button>
-    </form>
-}
+        <div class="card-footer d-flex gap-3">
+            <form method="post" asp-page-handler="CalculateTax" class="me-2">
+                <button type="submit" class="btn btn-success btn-sm">Vergiyi Hesapla</button>
+                @for (int i = 0; i < Model.CreatedStocks.Count; i++) 
+                { 
+                    <input type="hidden" asp-for="CreatedStocks[i].StockCode" /> 
+                    <input type="hidden" asp-for="CreatedStocks[i].BuyDate" /> 
+                    <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" /> 
+                    <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" /> 
+                    <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" /> 
+                }
+            </form>
+
+            <form method="post" asp-page-handler="Clear">
+                <button type="submit" class="btn btn-danger btn-sm">Tümünü Temizle</button>
+            </form>
+        </div>
+    </div>
+
 
 @if (Model.TaxCalculated)
 {
-    <h3>Tax Calculation Result:</h3>
-    <ul>
-        @foreach (var s in Model.CreatedStocks)
-        {
-            <li>
-                @s.StockCode — Buy Date: @s.BuyDate.ToString("dd.MM.yyyy") — Profit: @s.Profit.ToString("N2") TL - Min Tax Rate Applied: @s.MinTaxRateApplied.ToString("N2") TL
-            </li>
-        }
-    </ul>
+    <h3 class="mt-4 mb-3">Vergi Hesaplama Sonucu</h3>
 
-    <p style="font-weight:bold; margin-top:10px;">
-        Total Tax: @Model.TotalTax.ToString("N2") TL
-    </p>
+    <table class="table table-striped table-bordered align-middle text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Hisse</th>
+                <th>Alış Tarihi</th>
+                <th>Pay Adedi</th>
+                <th>Kar (TL)</th>
+                <th>Min. Vergi (15%)</th>
+                <th>Hesaplanan Vergi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.CreatedStocks)
+            {
+                <tr>
+                    <td>@s.StockCode</td>
+                    <td>@s.BuyDate.ToString("dd.MM.yyyy")</td>
+                    <td>@s.BuyAmount</td>
+                    <td>@s.Profit.ToString("N2") TL</td>
+                    <td>@s.MinTaxRateApplied.ToString("N2") TL</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot class="table-secondary fw-bold">
+            <tr>
+                <td colspan="5" class="text-end">Toplam Vergi:</td>
+                <td>@Model.TotalTax.ToString("N2") TL</td>
+            </tr>
+        </tfoot>
+    </table>
 }
