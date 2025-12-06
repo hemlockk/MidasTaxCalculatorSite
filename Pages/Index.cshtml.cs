@@ -14,7 +14,7 @@ namespace MidasTaxCalculatorSite.Pages
                 BuyDate = DateTime.Today.AddDays(-1)
             };
         }
-        public decimal? TotalTax { get; set; }
+        public decimal TotalTax { get; set; }
         public bool TaxCalculated { get; set; }
         public DateTime FxDate { get; set; } = DateTime.Today;
         public decimal? FxRate { get; set; }
@@ -30,6 +30,8 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal BuyAmount { get; set; }
             public decimal BuyPrice { get; set; }
             public decimal CurrentPrice { get; set; }
+            public decimal Profit { get; set; }
+            public decimal MinTaxRateApplied { get; set; }
         }
         public decimal CalculatedTax { get; private set; }
         public bool HasResult { get; private set; }
@@ -95,13 +97,24 @@ namespace MidasTaxCalculatorSite.Pages
 
         private async Task<decimal> CalculateTaxAsync(List<Stock> stocks)
         {
+            var ufeValues = await FetchUfeFromWebAsync();
             decimal income = 0;
             foreach (var stock in stocks)
             {
                 stock.CurrentPrice = (await GetCurrentPriceAsync(stock)).CurrentPrice;
                 decimal currentRate = await GetLatestUsdTryRateAsync();
                 decimal buyRate = await GetUsdTryRateAsync(stock.BuyDate);
-                decimal profit = (stock.CurrentPrice * currentRate - stock.BuyPrice * buyRate) * stock.BuyAmount;
+                decimal inflationAdjustedBuyPrice = stock.BuyPrice;
+                
+                int totalMonths = ((DateTime.Today.Year - stock.BuyDate.Year) * 12) + DateTime.Today.Month - stock.BuyDate.Month;
+
+                for (int i = 0; i < totalMonths; i++)
+                {
+                    inflationAdjustedBuyPrice *= 1 + ufeValues[i] / 100;
+                }
+                decimal profit = (stock.CurrentPrice * currentRate - inflationAdjustedBuyPrice * buyRate) * stock.BuyAmount;
+                stock.Profit = profit > 0 ? profit : 0;
+                stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
                 income += profit;
             }
             if (income <= 110000)
@@ -223,13 +236,6 @@ namespace MidasTaxCalculatorSite.Pages
         public IActionResult OnPostClear()
         {
             CreatedStocks.Clear();
-            return Page();
-        }
-        
-        public async Task<IActionResult> OnPostFetchUfeAsync()
-        {
-            LastUfeValues = await FetchUfeFromWebAsync();
-            UfeTableLoaded = true;
             return Page();
         }
         private async Task<List<decimal>> FetchUfeFromWebAsync()

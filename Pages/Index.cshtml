@@ -3,14 +3,19 @@
 
 
 <script>
-    function validateWeekend(input) {
-        const date = new Date(input.value);
-        const day = date.getUTCDay(); // 0=Sunday, 6=Saturday
+    function validateWeekend() {
+        const dateValue = document.getElementById('buyDate').value;
+        if (!dateValue) return true; // allow empty check to server
+
+        const date = new Date(dateValue + "T00:00:00"); 
+        const day = date.getDay(); // Local day: 0=Sunday, 6=Saturday
 
         if (day === 0 || day === 6) {
-            alert("Cannot pick a weekend date!");
-            input.value = "";
+            alert("Buy Date cannot be a weekend day!");
+            return false; // Block form submit
         }
+
+        return true; // allow submit
     }
 </script>
 
@@ -23,18 +28,15 @@
     <input asp-for="UserInput.StockCode" />
 
     <label>Buy Date</label>
-    <input type="date"
-       asp-for="UserInput.BuyDate"
-       oninput="validateWeekend(this)" />
+    <input type="date" asp-for="UserInput.BuyDate" id="buyDate" required />
 
     <label>Share Amount</label>
     <input asp-for="UserInput.BuyAmount" />
 
-    <label>Buy Price</label>
+    <label>Buy Price ($)</label>
     <input asp-for="UserInput.BuyPrice" />
 
-    <button type="submit">Add Stock</button>
-
+    <button type="submit" onclick="return validateWeekend()">Add Stock</button>
 </form>
 
 @if (Model.CreatedStocks.Count > 0)
@@ -43,7 +45,7 @@
     <ul>
         @foreach (var s in Model.CreatedStocks)
         {
-            <li>@s.StockCode — Buy: @s.BuyPrice — Buy Date: @s.BuyDate.ToString("dd.MM.yyyy")</li>
+            <li>@s.StockCode — Buy: @s.BuyPrice $ — Buy Date: @s.BuyDate.ToString("dd.MM.yyyy")</li>
         }
     </ul>
 
@@ -64,17 +66,19 @@
     </form>
 }
 
-<form method="post" asp-page-handler="FetchUfe">
-    <button type="submit">Load UFE</button>
-</form>
-
-@if (Model.UfeTableLoaded)
+@if (Model.TaxCalculated)
 {
-    <h3>UFE (Last 6 Months)</h3>
+    <h3>Tax Calculation Result:</h3>
     <ul>
-        @foreach (var val in Model.LastUfeValues)
+        @foreach (var s in Model.CreatedStocks)
         {
-            <li>@val</li>
+            <li>
+                @s.StockCode — Buy Date: @s.BuyDate.ToString("dd.MM.yyyy") — Profit: @s.Profit.ToString("N2") TL - Min Tax Rate Applied: @s.MinTaxRateApplied.ToString("N2") TL
+            </li>
         }
     </ul>
+
+    <p style="font-weight:bold; margin-top:10px;">
+        Total Tax: @Model.TotalTax.ToString("N2") TL
+    </p>
 }
