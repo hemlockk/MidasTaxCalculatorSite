@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "ahLFd2fsMP2LZ1aDTvWcFkV5lZQN8rTIzihRl1fOnet0B8re86DzciuciqwxEi2qQtyvIPdLDP+Nq9UPENMQEg==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\PC\\.nuget\\packages\\htmlagilitypack\\1.12.4\\htmlagilitypack.1.12.4.nupkg.sha512"
+  ],
+  "logs": []
+}

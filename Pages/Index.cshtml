@@ -1,0 +1,82 @@
+﻿@page
+@model MidasTaxCalculatorSite.Pages.IndexModel
+
+
+<script>
+    function validateWeekend(input) {
+        const date = new Date(input.value);
+        const day = date.getUTCDay(); // 0=Sunday, 6=Saturday
+
+        if (day === 0 || day === 6) {
+            alert("Cannot pick a weekend date!");
+            input.value = "";
+        }
+    }
+</script>
+
+<h2>Add Stock</h2>
+
+
+<form method="post">
+
+    <label>Stock Code</label>
+    <input asp-for="UserInput.StockCode" />
+
+    <label>Buy Date</label>
+    <input type="date"
+       asp-for="UserInput.BuyDate"
+       oninput="validateWeekend(this)" />
+
+    <label>Share Amount</label>
+    <input asp-for="UserInput.BuyAmount" />
+
+    <label>Buy Price</label>
+    <input asp-for="UserInput.BuyPrice" />
+
+    <button type="submit">Add Stock</button>
+
+</form>
+
+@if (Model.CreatedStocks.Count > 0)
+{
+    <h3>Created Stocks:</h3>
+    <ul>
+        @foreach (var s in Model.CreatedStocks)
+        {
+            <li>@s.StockCode — Buy: @s.BuyPrice — Buy Date: @s.BuyDate.ToString("dd.MM.yyyy")</li>
+        }
+    </ul>
+
+    <form method="post" asp-page-handler="CalculateTax">
+        @for (int i = 0; i < Model.CreatedStocks.Count; i++)
+        {
+            <input type="hidden" asp-for="CreatedStocks[i].StockCode" />
+            <input type="hidden" asp-for="CreatedStocks[i].BuyDate" />
+            <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" />
+            <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" />
+            <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" />
+        }
+
+        <button type="submit">Calculate Tax</button>
+    </form>
+    <form method="post" asp-page-handler="Clear" style="margin-top:10px;">
+        <button type="submit" style="background-color:#cc0000; color:white;">Clear All Stocks</button>
+    </form>
+}
+<form method="post" asp-page-handler="UfeCalc">
+    <button type="submit">UFE Calculation</button>
+</form>
+
+@if (Model.UfeCalculated)
+{
+    <h3>UFE Results:</h3>
+    <p><strong>Buy Date:</strong> @Model.UserInput.BuyDate.ToString("dd.MM.yyyy")</p>
+    <p><strong>Buy Date UFE:</strong> @Model.UfeBuyDate</p>
+    <p><strong>Today UFE:</strong> @Model.UfeToday</p>
+    <p><strong>Inflation Factor:</strong> @Model.InflationFactor</p>
+}
+@if (Model.TaxCalculated)
+{
+    <h3>Total Tax:</h3>
+    <p><strong>@Model.TotalTax</strong> TL</p>
+}
