@@ -63,20 +63,18 @@
         <button type="submit" style="background-color:#cc0000; color:white;">Clear All Stocks</button>
     </form>
 }
-<form method="post" asp-page-handler="UfeCalc">
-    <button type="submit">UFE Calculation</button>
+
+<form method="post" asp-page-handler="FetchUfe">
+    <button type="submit">Load UFE</button>
 </form>
 
-@if (Model.UfeCalculated)
+@if (Model.UfeTableLoaded)
 {
-    <h3>UFE Results:</h3>
-    <p><strong>Buy Date:</strong> @Model.UserInput.BuyDate.ToString("dd.MM.yyyy")</p>
-    <p><strong>Buy Date UFE:</strong> @Model.UfeBuyDate</p>
-    <p><strong>Today UFE:</strong> @Model.UfeToday</p>
-    <p><strong>Inflation Factor:</strong> @Model.InflationFactor</p>
-}
-@if (Model.TaxCalculated)
-{
-    <h3>Total Tax:</h3>
-    <p><strong>@Model.TotalTax</strong> TL</p>
+    <h3>UFE (Last 6 Months)</h3>
+    <ul>
+        @foreach (var val in Model.LastUfeValues)
+        {
+            <li>@val</li>
+        }
+    </ul>
 }

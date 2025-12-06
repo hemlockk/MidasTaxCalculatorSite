@@ -23,10 +23,6 @@ namespace MidasTaxCalculatorSite.Pages
         public Stock UserInput { get; set; } = new();
         [BindProperty]
         public List<Stock> CreatedStocks { get; set; } = new();
-        public decimal? UfeBuyDate { get; set; }
-        public decimal? UfeToday { get; set; }
-        public decimal? InflationFactor { get; set; }
-        public bool UfeCalculated { get; set; }
         public class Stock
         {
             public string StockCode { get; set; }
@@ -37,6 +33,8 @@ namespace MidasTaxCalculatorSite.Pages
         }
         public decimal CalculatedTax { get; private set; }
         public bool HasResult { get; private set; }
+        public List<decimal> LastUfeValues { get; set; } = new();
+        public bool UfeTableLoaded { get; set; }
         public async Task<Stock> GetCurrentPriceAsync(Stock stock)
         {
             // alphavantage API
@@ -227,46 +225,56 @@ namespace MidasTaxCalculatorSite.Pages
             CreatedStocks.Clear();
             return Page();
         }
-        private async Task<decimal?> GetUfeForMonthAsync(DateTime date)
+        
+        public async Task<IActionResult> OnPostFetchUfeAsync()
         {
-            // UFE is always at the start of the month
-            var monthStart = new DateTime(date.Year, date.Month, 1);
-
-            string url =
-                $"https://evds2.tcmb.gov.tr/service/evds/series=TP.FG.H0" +
-                $"&startDate={monthStart:dd-MM-yyyy}" +
-                $"&endDate={monthStart:dd-MM-yyyy}" +
-                $"&type=json";
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("key", "***REMOVED***");
-
-            string json = await client.GetStringAsync(url);
-
-            using var doc = JsonDocument.Parse(json);
-            var items = doc.RootElement.GetProperty("items");
-
-            if (items.GetArrayLength() == 0)
-                return null;
-
-            string ufeStr = items[0].GetProperty("TP_FG_H0").GetString();
-            return decimal.Parse(ufeStr, CultureInfo.InvariantCulture);
-        }
-        public async Task<IActionResult> OnPostUfeCalcAsync()
-        {
-            // Use BuyDate the user entered in the main form
-            DateTime buyDate = UserInput.BuyDate;
-
-            UfeBuyDate = await GetUfeForMonthAsync(buyDate);
-            UfeToday = await GetUfeForMonthAsync(DateTime.Today);
-
-            if (UfeBuyDate.HasValue && UfeToday.HasValue)
-                InflationFactor = UfeToday.Value / UfeBuyDate.Value;
-
-            UfeCalculated = true;
-
+            LastUfeValues = await FetchUfeFromWebAsync();
+            UfeTableLoaded = true;
             return Page();
         }
+        private async Task<List<decimal>> FetchUfeFromWebAsync()
+        {
+            string url = "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Enflasyon+Verileri/Uretici+Fiyatlari";
+
+            using var client = new HttpClient();
+            string html = await client.GetStringAsync(url);
+
+            var doc = new HtmlAgilityPack.HtmlDocument();
+            doc.LoadHtml(html);
+
+            var ufeValues = new List<decimal>();
+
+            // Find all rows in tables
+            var rows = doc.DocumentNode.SelectNodes("//table//tr");
+
+            if (rows == null)
+                return ufeValues;
+
+            foreach (var row in rows)
+            {
+                var cells = row.SelectNodes("td");
+                if (cells == null || cells.Count < 5)
+                    continue;
+
+                // Month:
+                string monthText = cells[0].InnerText.Trim();
+
+                // UFE column (5th column)
+                string ufeText = cells[4].InnerText.Trim()
+                                .Replace(",", "."); // decimal fix for TR locale
+
+                if (decimal.TryParse(ufeText, System.Globalization.NumberStyles.Any, 
+                                    System.Globalization.CultureInfo.InvariantCulture, 
+                                    out decimal ufeValue))
+                {
+                    ufeValues.Add(ufeValue);
+                }
+            }
+
+            // Return last 6 months only (like your Python code)
+            return ufeValues.Take(30).ToList();
+        }
+
 
 
     }
