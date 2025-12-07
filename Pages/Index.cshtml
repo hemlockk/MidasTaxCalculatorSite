@@ -216,3 +216,70 @@
         </tfoot>
     </table>
 }
+<div class="card mt-4 mb-4">
+    <div class="card-header bg-info text-white">
+        API Anahtarlarınız (İsteğe Bağlı)
+    </div>
+
+    <div class="card-body">
+
+        <div class="alert alert-warning small" role="alert">
+            EVDS anahtarı ve <strong>AlphaVantage veya Yahoo Finance</strong> 
+            anahtarlarından en az birinin girilmesi gerekir. Bu alanlar boş 
+            bırakılırsa uygulama varsayılan anahtarları kullanır. Varsayılan 
+            anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir.
+        </div>
+
+        <form method="post" asp-page-handler="SaveKeys">
+            <div class="row g-3">
+
+                <div class="col-md-4 position-relative">
+                    <label class="form-label">EVDS API Key</label>
+                    <input asp-for="UserEvdsKey"
+                        class="form-control"
+                        placeholder="Varsayılan anahtar kullanılacak">
+
+                    @if (Model.HasUserEvdsKey)
+                    {
+                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">
+                            ✔
+                        </span>
+                    }
+                </div>
+
+
+                <div class="col-md-4 position-relative">
+                    <label class="form-label">AlphaVantage API Key</label>
+                    <input asp-for="UserAlphaKey"
+                        class="form-control"
+                        placeholder="İsteğe bağlı">
+
+                    @if (Model.HasUserAlphaKey)
+                    {
+                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">
+                            ✔
+                        </span>
+                    }
+                </div>
+
+
+                <div class="col-md-4 position-relative">
+                    <label class="form-label">Yahoo API Key</label>
+                    <input asp-for="UserYahooKey"
+                        class="form-control"
+                        placeholder="İsteğe bağlı">
+
+                    @if (Model.HasUserYahooKey)
+                    {
+                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">
+                            ✔
+                        </span>
+                    }
+                </div>
+                </div>
+            <button type="submit" class="btn btn-info text-white mt-3">
+                Anahtarları Kaydet
+            </button>
+        </form>
+    </div>
+</div>

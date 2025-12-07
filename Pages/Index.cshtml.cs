@@ -3,14 +3,15 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
 using Newtonsoft.Json;
 using System.Globalization;
-using Microsoft.Extensions.FileSystemGlobbing.Internal.PathSegments;
 using System.ComponentModel.DataAnnotations;
 namespace MidasTaxCalculatorSite.Pages
 {
     public class IndexModel : PageModel
     {
-        public IndexModel()
+        private readonly IConfiguration _config;
+        public IndexModel(IConfiguration config)
         {
+            _config = config;
             UserInput = new Stock
             {
                 BuyDate = DateTime.Today.AddDays(-1)
@@ -19,9 +20,18 @@ namespace MidasTaxCalculatorSite.Pages
         public void OnGet()
         {
             LoadStocksFromSession();
+            LoadUserKeysFromSession();
             if (UserInput == null || UserInput.BuyDate == default)
-            UserInput = new Stock { BuyDate = DateTime.Today };
+            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) }; 
         }
+        public bool HasUserEvdsKey => !string.IsNullOrWhiteSpace(UserEvdsKey);
+        public bool HasUserAlphaKey => !string.IsNullOrWhiteSpace(UserAlphaKey);
+        public bool HasUserYahooKey => !string.IsNullOrWhiteSpace(UserYahooKey);
+        public string UserEvdsKey { get; set; }
+        [BindProperty]
+        public string UserAlphaKey { get; set; }
+        [BindProperty]
+        public string UserYahooKey { get; set; }
         public decimal TotalTax { get; set; }
         public bool TaxCalculated { get; set; }
         public DateTime FxDate { get; set; } = DateTime.Today;
@@ -52,7 +62,7 @@ namespace MidasTaxCalculatorSite.Pages
         {
             // alphavantage API
             var client = new HttpClient();
-            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=RKUS7RV49I6ZCFB6";
+            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=" + _config["ApiKeys:AlphaVantage"];
             var json = await client.GetStringAsync(url);
 
             using var doc = JsonDocument.Parse(json);
@@ -71,9 +81,10 @@ namespace MidasTaxCalculatorSite.Pages
             // Yahoo API in case other doesn't work
             else if(stock.CurrentPrice == null || stock.CurrentPrice == 0)
             {
+                string yahooKey = _config["ApiKeys:Yahoo"];
                 client = new HttpClient();
 
-                    client.DefaultRequestHeaders.Add("x-rapidapi-key", "7fdcc0ff31msh3cdf229a6c7d425p123c53jsn3be5a715757b");
+                    client.DefaultRequestHeaders.Add("x-rapidapi-key", yahooKey);
                     client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
 
                 url = $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes?region=US&symbols={stock.StockCode}";
@@ -170,17 +181,16 @@ namespace MidasTaxCalculatorSite.Pages
         private async Task<decimal> GetLatestUsdTryRateAsync()
         {
             DateTime date = DateTime.Today;
-
+            string evdsKey = _config["ApiKeys:Evds"];
             for (int i = 0; i < 10; i++) // look back up to 10 days
             {
                 string dateString = date.ToString("dd-MM-yyyy");
-
                 string url =
                     $"https://evds2.tcmb.gov.tr/service/evds/series=TP.DK.USD.S.YTL" +
                     $"&startDate={dateString}&endDate={dateString}&type=json";
 
                 using var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("key", "0ltoPONTk2");
+                client.DefaultRequestHeaders.Add("key", evdsKey);
 
                 string json = await client.GetStringAsync(url);
 
@@ -215,7 +225,7 @@ namespace MidasTaxCalculatorSite.Pages
         private async Task<decimal> GetUsdTryRateAsync(DateTime date)
         {
             string dateString = date.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
-
+            string evdsKey = _config["ApiKeys:Evds"];
             if (date > DateTime.Today.AddDays(-1))
             {
                 dateString = DateTime.Today.AddDays(-1).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
@@ -228,7 +238,7 @@ namespace MidasTaxCalculatorSite.Pages
             using var client = new HttpClient();
 
             // Must be added as HTTP header (just like in Postman)
-            client.DefaultRequestHeaders.Add("key", "0ltoPONTk2");
+            client.DefaultRequestHeaders.Add("key", evdsKey);
 
             var response = await client.GetAsync(url);
 
@@ -256,7 +266,7 @@ namespace MidasTaxCalculatorSite.Pages
         public IActionResult OnPostClear()
         {
             HttpContext.Session.Remove("Stocks");
-            UserInput = new Stock { BuyDate = DateTime.Today };
+            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
         private async Task<List<decimal>> FetchUfeFromWebAsync()
@@ -322,6 +332,44 @@ namespace MidasTaxCalculatorSite.Pages
                 SaveStocksToSession();
             }
 
+            return Page();
+        }
+        public void SaveUserKeysToSession()
+        {
+            HttpContext.Session.SetString("UserEvdsKey", UserEvdsKey ?? "");
+            HttpContext.Session.SetString("UserAlphaKey", UserAlphaKey ?? "");
+            HttpContext.Session.SetString("UserYahooKey", UserYahooKey ?? "");
+        }
+
+        public void LoadUserKeysFromSession()
+        {
+            UserEvdsKey = HttpContext.Session.GetString("UserEvdsKey");
+            UserAlphaKey = HttpContext.Session.GetString("UserAlphaKey");
+            UserYahooKey = HttpContext.Session.GetString("UserYahooKey");
+        }
+        private string GetEvdsKey()
+        {
+            return !string.IsNullOrWhiteSpace(UserEvdsKey)
+                ? UserEvdsKey
+                : _config["ApiKeys:Evds"];
+        }
+
+        private string GetAlphaKey()
+        {
+            return !string.IsNullOrWhiteSpace(UserAlphaKey)
+                ? UserAlphaKey
+                : _config["ApiKeys:AlphaVantage"];
+        }
+
+        private string GetYahooKey()
+        {
+            return !string.IsNullOrWhiteSpace(UserYahooKey)
+                ? UserYahooKey
+                : _config["ApiKeys:Yahoo"];
+        }
+        public IActionResult OnPostSaveKeys()
+        {
+            SaveUserKeysToSession();
             return Page();
         }
     }

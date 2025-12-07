@@ -119,11 +119,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+      "projectUniqueName": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
       "projectName": "MidasTaxCalculatorSite",
-      "projectPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+      "projectPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
       "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\obj\\",
+      "outputPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
