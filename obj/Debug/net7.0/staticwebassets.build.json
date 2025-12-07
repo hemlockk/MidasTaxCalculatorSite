@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "PuqqLjsUEQrDOJoFwqHTjUD1mo/+XHYEzbtEfS4R74I=",
+  "Hash": "ZpBQ6Wc61dx37zzOjB+vzDZy9mb4ar3kHnz5BfU23hY=",
   "Source": "MidasTaxCalculatorSite",
   "BasePath": "_content/MidasTaxCalculatorSite",
   "Mode": "Default",
@@ -83,6 +83,40 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\wwwroot\\images\\MidasInfo.jpg",
+      "SourceId": "MidasTaxCalculatorSite",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\wwwroot\\",
+      "BasePath": "_content/MidasTaxCalculatorSite",
+      "RelativePath": "images/MidasInfo.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\MidasInfo.jpg"
+    },
+    {
+      "Identity": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\wwwroot\\images\\MidasStockCode.jpg",
+      "SourceId": "MidasTaxCalculatorSite",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\wwwroot\\",
+      "BasePath": "_content/MidasTaxCalculatorSite",
+      "RelativePath": "images/MidasStockCode.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\MidasStockCode.jpg"
     },
     {
       "Identity": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\wwwroot\\js\\site.js",

@@ -64,3 +64,4 @@ C:\Users\PC\Documents\MidasTaxCalculatorSite\obj\Debug\net7.0\refint\MidasTaxCal
 C:\Users\PC\Documents\MidasTaxCalculatorSite\obj\Debug\net7.0\MidasTaxCalculatorSite.pdb
 C:\Users\PC\Documents\MidasTaxCalculatorSite\obj\Debug\net7.0\MidasTaxCalculatorSite.genruntimeconfig.cache
 C:\Users\PC\Documents\MidasTaxCalculatorSite\obj\Debug\net7.0\ref\MidasTaxCalculatorSite.dll
+C:\Users\PC\Documents\MidasTaxCalculatorSite\bin\Debug\net7.0\Newtonsoft.Json.dll

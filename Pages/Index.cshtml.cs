@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
+using Newtonsoft.Json;
 using System.Globalization;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.PathSegments;
 using System.ComponentModel.DataAnnotations;
@@ -15,6 +16,10 @@ namespace MidasTaxCalculatorSite.Pages
                 BuyDate = DateTime.Today.AddDays(-1)
             };
         }
+        public void OnGet()
+        {
+            LoadStocksFromSession();
+        }
         public decimal TotalTax { get; set; }
         public bool TaxCalculated { get; set; }
         public DateTime FxDate { get; set; } = DateTime.Today;
@@ -27,7 +32,7 @@ namespace MidasTaxCalculatorSite.Pages
         public class Stock
         {
             [Required(ErrorMessage = "Lütfen hisse kodunu giriniz.")]
-            [RegularExpression(@"^[A-Za-z]{1,5}$", ErrorMessage = "Hisse kodu yalnızca en fazla 5 harf olmalıdır.")]
+            [RegularExpression(@"^[A-Za-z\.]{1,5}$", ErrorMessage = "Hisse kodu yalnızca harf ve nokta içerebilir (en fazla 5 karakter).")]
             public string StockCode { get; set; }
             public DateTime BuyDate { get; set; }
             [Range(0.01, double.MaxValue, ErrorMessage = "Hisse miktarı 0'dan büyük olmalıdır.")]
@@ -41,7 +46,6 @@ namespace MidasTaxCalculatorSite.Pages
         public decimal CalculatedTax { get; private set; }
         public bool HasResult { get; private set; }
         public List<decimal> LastUfeValues { get; set; } = new();
-        public bool UfeTableLoaded { get; set; }
         public async Task<Stock> GetCurrentPriceAsync(Stock stock)
         {
             // alphavantage API
@@ -84,30 +88,31 @@ namespace MidasTaxCalculatorSite.Pages
 
           return stock;*/
         }
-
-        public void OnPost()
+        public IActionResult OnPostAddStock()
         {
-            // Create new Stock from user input
+            LoadStocksFromSession();
+
             var newStock = new Stock
             {
                 StockCode = UserInput.StockCode,
                 BuyDate = UserInput.BuyDate,
                 BuyAmount = UserInput.BuyAmount,
-                BuyPrice = UserInput.BuyPrice,
-                CurrentPrice = 0  // you can update later
+                BuyPrice = UserInput.BuyPrice
             };
 
             CreatedStocks.Add(newStock);
-        }
+            SaveStocksToSession();
 
+            return Page();
+        }
         private async Task<decimal> CalculateTaxAsync(List<Stock> stocks)
         {
             var ufeValues = await FetchUfeFromWebAsync();
             decimal income = 0;
+            decimal currentRate = await GetLatestUsdTryRateAsync();
             foreach (var stock in stocks)
             {
                 stock.CurrentPrice = (await GetCurrentPriceAsync(stock)).CurrentPrice;
-                decimal currentRate = await GetLatestUsdTryRateAsync();
                 decimal buyRate = await GetUsdTryRateAsync(stock.BuyDate);
                 decimal inflationAdjustedBuyPrice = stock.BuyPrice;
                 
@@ -240,7 +245,7 @@ namespace MidasTaxCalculatorSite.Pages
         }
         public IActionResult OnPostClear()
         {
-            CreatedStocks.Clear();
+            HttpContext.Session.Remove("Stocks");
             return Page();
         }
         private async Task<List<decimal>> FetchUfeFromWebAsync()
@@ -283,10 +288,31 @@ namespace MidasTaxCalculatorSite.Pages
             }
 
             // Return last 6 months only (like your Python code)
-            return ufeValues.Take(30).ToList();
+            return ufeValues;
         }
+        public void SaveStocksToSession()
+        {
+            var json = JsonConvert.SerializeObject(CreatedStocks);
+            HttpContext.Session.SetString("Stocks", json);
+        }
+        public void LoadStocksFromSession()
+        {
+            var json = HttpContext.Session.GetString("Stocks");
+            if (!string.IsNullOrEmpty(json))
+                CreatedStocks = JsonConvert.DeserializeObject<List<Stock>>(json);
+        }
+        public IActionResult OnPostDeleteStock(int index)
+        {
+            LoadStocksFromSession();
 
+            if (index >= 0 && index < CreatedStocks.Count)
+            {
+                CreatedStocks.RemoveAt(index);
+                SaveStocksToSession();
+            }
 
-
+            return Page();
+        }
     }
+    
 }

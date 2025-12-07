@@ -8,7 +8,8 @@
     ".NETCoreApp,Version=v7.0": {
       "MidasTaxCalculatorSite/1.0.0": {
         "dependencies": {
-          "HtmlAgilityPack": "1.12.4"
+          "HtmlAgilityPack": "1.12.4",
+          "Newtonsoft.Json": "13.0.4"
         },
         "runtime": {
           "MidasTaxCalculatorSite.dll": {}
@@ -19,6 +20,14 @@
           "lib/net7.0/HtmlAgilityPack.dll": {
             "assemblyVersion": "1.12.4.0",
             "fileVersion": "1.12.4.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.4": {
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.4.30916"
           }
         }
       }
@@ -36,6 +45,13 @@
       "sha512": "sha512-ljqvBabvFwKoLniuoQKO8b5bJfJweKLs4fUNS/V5dsvpo0A8MlJqxxn9XVmP2DaskbUXty6IYaWAi1SArGIMeQ==",
       "path": "htmlagilitypack/1.12.4",
       "hashPath": "htmlagilitypack.1.12.4.nupkg.sha512"
+    },
+    "Newtonsoft.Json/13.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A==",
+      "path": "newtonsoft.json/13.0.4",
+      "hashPath": "newtonsoft.json.13.0.4.nupkg.sha512"
     }
   }
 }
