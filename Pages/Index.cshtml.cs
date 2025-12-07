@@ -19,6 +19,8 @@ namespace MidasTaxCalculatorSite.Pages
         public void OnGet()
         {
             LoadStocksFromSession();
+            if (UserInput == null || UserInput.BuyDate == default)
+            UserInput = new Stock { BuyDate = DateTime.Today };
         }
         public decimal TotalTax { get; set; }
         public bool TaxCalculated { get; set; }
@@ -50,7 +52,7 @@ namespace MidasTaxCalculatorSite.Pages
         {
             // alphavantage API
             var client = new HttpClient();
-            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=***REMOVED***";
+            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=RKUS7RV49I6ZCFB6";
             var json = await client.GetStringAsync(url);
 
             using var doc = JsonDocument.Parse(json);
@@ -62,31 +64,39 @@ namespace MidasTaxCalculatorSite.Pages
                 .GetString();
 
             stock.CurrentPrice = decimal.Parse(priceString);
+            if(stock.CurrentPrice != null && stock.CurrentPrice != 0)
+            {
+                return stock;
+            }
+            // Yahoo API in case other doesn't work
+            else if(stock.CurrentPrice == null || stock.CurrentPrice == 0)
+            {
+                client = new HttpClient();
 
-            return stock;
+                    client.DefaultRequestHeaders.Add("x-rapidapi-key", "7fdcc0ff31msh3cdf229a6c7d425p123c53jsn3be5a715757b");
+                    client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
 
-            // Yahoo API
-            /*
-           var client = new HttpClient();
+                url = $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes?region=US&symbols={stock.StockCode}";
 
-            client.DefaultRequestHeaders.Add("x-rapidapi-key", "***REMOVED***");
-            client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
+                json = await client.GetStringAsync(url);
 
-          var url = $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes?region=US&symbols={stock.Symbol}";
+                using var doc2 = JsonDocument.Parse(json);
 
-          var json = await client.GetStringAsync(url);
+                var price = doc2.RootElement
+                    .GetProperty("quoteResponse")
+                    .GetProperty("result")[0]
+                    .GetProperty("regularMarketPrice")
+                    .GetDecimal();
 
-          using var doc = JsonDocument.Parse(json);
+                stock.CurrentPrice = price;
 
-           var price = doc.RootElement
-            .GetProperty("quoteResponse")
-            .GetProperty("result")[0]
-            .GetProperty("regularMarketPrice")
-            .GetDecimal();
-
-          stock.CurrentPrice = price;
-
-          return stock;*/
+                return stock;
+            }
+            else
+            {
+                throw new Exception("Could not retrieve stock price from either API.");
+            }
+           
         }
         public IActionResult OnPostAddStock()
         {
@@ -94,7 +104,7 @@ namespace MidasTaxCalculatorSite.Pages
 
             var newStock = new Stock
             {
-                StockCode = UserInput.StockCode,
+                StockCode = UserInput.StockCode.ToUpper(),
                 BuyDate = UserInput.BuyDate,
                 BuyAmount = UserInput.BuyAmount,
                 BuyPrice = UserInput.BuyPrice
@@ -170,7 +180,7 @@ namespace MidasTaxCalculatorSite.Pages
                     $"&startDate={dateString}&endDate={dateString}&type=json";
 
                 using var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("key", "***REMOVED***");
+                client.DefaultRequestHeaders.Add("key", "0ltoPONTk2");
 
                 string json = await client.GetStringAsync(url);
 
@@ -218,7 +228,7 @@ namespace MidasTaxCalculatorSite.Pages
             using var client = new HttpClient();
 
             // Must be added as HTTP header (just like in Postman)
-            client.DefaultRequestHeaders.Add("key", "***REMOVED***");
+            client.DefaultRequestHeaders.Add("key", "0ltoPONTk2");
 
             var response = await client.GetAsync(url);
 
@@ -246,6 +256,7 @@ namespace MidasTaxCalculatorSite.Pages
         public IActionResult OnPostClear()
         {
             HttpContext.Session.Remove("Stocks");
+            UserInput = new Stock { BuyDate = DateTime.Today };
             return Page();
         }
         private async Task<List<decimal>> FetchUfeFromWebAsync()
