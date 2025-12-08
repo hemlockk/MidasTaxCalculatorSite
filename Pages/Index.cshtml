@@ -5,6 +5,14 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
+<script>
+    $(function () {
+        $("form[asp-page-handler='SaveKeys']").removeData("validator") 
+                                              .removeData("unobtrusiveValidation");
+    });
+</script>
+
+
 <div style="margin-bottom:15px; font-size:15px; line-height:1.5;">
     <p>
         ABD borsalarından elde edilen alım satım kazançları, beyana tabi tutulmalıdır.
@@ -230,56 +238,44 @@
             anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir.
         </div>
 
-        <form method="post" asp-page-handler="SaveKeys">
+        <form method="post" asp-page-handler="SaveKeys" novalidate data-val="false">
             <div class="row g-3">
-
                 <div class="col-md-4 position-relative">
                     <label class="form-label">EVDS API Key</label>
                     <input asp-for="UserEvdsKey"
                         class="form-control"
                         placeholder="Varsayılan anahtar kullanılacak">
-
                     @if (Model.HasUserEvdsKey)
                     {
-                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">
-                            ✔
-                        </span>
+                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
                     }
                 </div>
-
-
                 <div class="col-md-4 position-relative">
                     <label class="form-label">AlphaVantage API Key</label>
                     <input asp-for="UserAlphaKey"
                         class="form-control"
                         placeholder="İsteğe bağlı">
-
                     @if (Model.HasUserAlphaKey)
                     {
-                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">
-                            ✔
-                        </span>
+                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
                     }
                 </div>
-
 
                 <div class="col-md-4 position-relative">
                     <label class="form-label">Yahoo API Key</label>
                     <input asp-for="UserYahooKey"
                         class="form-control"
                         placeholder="İsteğe bağlı">
-
                     @if (Model.HasUserYahooKey)
                     {
-                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">
-                            ✔
-                        </span>
+                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
                     }
                 </div>
-                </div>
+            </div>
             <button type="submit" class="btn btn-info text-white mt-3">
                 Anahtarları Kaydet
             </button>
         </form>
+
     </div>
 </div>

@@ -27,11 +27,12 @@ namespace MidasTaxCalculatorSite.Pages
         public bool HasUserEvdsKey => !string.IsNullOrWhiteSpace(UserEvdsKey);
         public bool HasUserAlphaKey => !string.IsNullOrWhiteSpace(UserAlphaKey);
         public bool HasUserYahooKey => !string.IsNullOrWhiteSpace(UserYahooKey);
-        public string UserEvdsKey { get; set; }
         [BindProperty]
-        public string UserAlphaKey { get; set; }
+        public string? UserEvdsKey { get; set; }
         [BindProperty]
-        public string UserYahooKey { get; set; }
+        public string? UserAlphaKey { get; set; }
+        [BindProperty]
+        public string? UserYahooKey { get; set; }
         public decimal TotalTax { get; set; }
         public bool TaxCalculated { get; set; }
         public DateTime FxDate { get; set; } = DateTime.Today;
@@ -62,7 +63,7 @@ namespace MidasTaxCalculatorSite.Pages
         {
             // alphavantage API
             var client = new HttpClient();
-            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=" + _config["ApiKeys:AlphaVantage"];
+            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=" + GetAlphaKey();
             var json = await client.GetStringAsync(url);
 
             using var doc = JsonDocument.Parse(json);
@@ -84,7 +85,7 @@ namespace MidasTaxCalculatorSite.Pages
                 string yahooKey = _config["ApiKeys:Yahoo"];
                 client = new HttpClient();
 
-                    client.DefaultRequestHeaders.Add("x-rapidapi-key", yahooKey);
+                    client.DefaultRequestHeaders.Add("x-rapidapi-key", GetYahooKey());
                     client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
 
                 url = $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes?region=US&symbols={stock.StockCode}";
@@ -112,7 +113,7 @@ namespace MidasTaxCalculatorSite.Pages
         public IActionResult OnPostAddStock()
         {
             LoadStocksFromSession();
-
+            LoadUserKeysFromSession();
             var newStock = new Stock
             {
                 StockCode = UserInput.StockCode.ToUpper(),
@@ -172,16 +173,16 @@ namespace MidasTaxCalculatorSite.Pages
         public async Task<IActionResult> OnPostCalculateTaxAsync()
         {
             // created stocks list must already be populated from your Add Stock function
-
             TotalTax = await CalculateTaxAsync(CreatedStocks);
             TaxCalculated = true;
-
+            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
         private async Task<decimal> GetLatestUsdTryRateAsync()
         {
+            LoadUserKeysFromSession();
             DateTime date = DateTime.Today;
-            string evdsKey = _config["ApiKeys:Evds"];
+            string evdsKey = GetEvdsKey();
             for (int i = 0; i < 10; i++) // look back up to 10 days
             {
                 string dateString = date.ToString("dd-MM-yyyy");
@@ -225,7 +226,7 @@ namespace MidasTaxCalculatorSite.Pages
         private async Task<decimal> GetUsdTryRateAsync(DateTime date)
         {
             string dateString = date.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
-            string evdsKey = _config["ApiKeys:Evds"];
+            string evdsKey = GetEvdsKey();
             if (date > DateTime.Today.AddDays(-1))
             {
                 dateString = DateTime.Today.AddDays(-1).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
@@ -265,6 +266,7 @@ namespace MidasTaxCalculatorSite.Pages
         }
         public IActionResult OnPostClear()
         {
+            LoadUserKeysFromSession();
             HttpContext.Session.Remove("Stocks");
             UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
@@ -325,7 +327,8 @@ namespace MidasTaxCalculatorSite.Pages
         public IActionResult OnPostDeleteStock(int index)
         {
             LoadStocksFromSession();
-
+            LoadUserKeysFromSession();
+            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             if (index >= 0 && index < CreatedStocks.Count)
             {
                 CreatedStocks.RemoveAt(index);
@@ -340,7 +343,6 @@ namespace MidasTaxCalculatorSite.Pages
             HttpContext.Session.SetString("UserAlphaKey", UserAlphaKey ?? "");
             HttpContext.Session.SetString("UserYahooKey", UserYahooKey ?? "");
         }
-
         public void LoadUserKeysFromSession()
         {
             UserEvdsKey = HttpContext.Session.GetString("UserEvdsKey");
@@ -353,14 +355,12 @@ namespace MidasTaxCalculatorSite.Pages
                 ? UserEvdsKey
                 : _config["ApiKeys:Evds"];
         }
-
         private string GetAlphaKey()
         {
             return !string.IsNullOrWhiteSpace(UserAlphaKey)
                 ? UserAlphaKey
                 : _config["ApiKeys:AlphaVantage"];
         }
-
         private string GetYahooKey()
         {
             return !string.IsNullOrWhiteSpace(UserYahooKey)
@@ -370,6 +370,9 @@ namespace MidasTaxCalculatorSite.Pages
         public IActionResult OnPostSaveKeys()
         {
             SaveUserKeysToSession();
+            LoadUserKeysFromSession();
+            LoadStocksFromSession();
+            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
     }
