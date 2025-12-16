@@ -202,21 +202,49 @@
                 <th>Pay Adedi</th>
                 <th>Kar (TL)</th>
                 <th>Min. Vergi (15%)</th>
-                <th>Hesaplanan Vergi</th>
+                <th>Detay</th>
             </tr>
         </thead>
+
         <tbody>
-            @foreach (var s in Model.CreatedStocks)
+            @for (int i = 0; i < Model.CreatedStocks.Count; i++)
             {
+                var s = Model.CreatedStocks[i];
+                var detailId = $"details-{i}";
+
                 <tr>
                     <td>@s.StockCode</td>
                     <td>@s.BuyDate.ToString("dd.MM.yyyy")</td>
                     <td>@s.BuyAmount</td>
                     <td>@s.Profit.ToString("N2") TL</td>
                     <td>@s.MinTaxRateApplied.ToString("N2") TL</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#@detailId">
+                            Detay
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Details row -->
+                <tr class="collapse bg-light" id="@detailId">
+                    <td colspan="6" class="text-start">
+                        <div class="p-3">
+                            <strong>Detaylı Hesaplama</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Alış ÜFE Endeksi:</strong> @s.BuyUfeIndex</li>
+                                <li><strong>Satış ÜFE Endeksi:</strong> @s.SellUfeIndex</li>
+                                <li><strong>Alış Kur (USD/TRY):</strong> @s.BuyRate.ToString("N4")</li>
+                                <li><strong>Satış Kur (USD/TRY):</strong> @s.SellRate.ToString("N4")</li>
+                            </ul>
+                        </div>
+                    </td>
                 </tr>
             }
         </tbody>
+
         <tfoot class="table-secondary fw-bold">
             <tr>
                 <td colspan="5" class="text-end">Toplam Vergi:</td>
@@ -225,6 +253,7 @@
         </tfoot>
     </table>
 }
+
 <div class="card mt-4 mb-4">
     <div class="card-header bg-info text-white">
         API Anahtarlarınız (İsteğe Bağlı)

@@ -57,6 +57,8 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal MinTaxRateApplied { get; set; }
             public decimal BuyUfeIndex { get; set; }
             public decimal SellUfeIndex { get; set; }
+            public decimal BuyRate { get; set; }
+            public decimal SellRate { get; set; }
         }
         public decimal CalculatedTax { get; private set; }
         public bool HasResult { get; private set; }
@@ -153,18 +155,18 @@ namespace MidasTaxCalculatorSite.Pages
             decimal currentRate = await GetUsdTryRateAsync(DateTime.Today.AddDays(-1));
             foreach (var stock in stocks)
             {
-                decimal buyUfe = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
-                decimal sellUfe = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
+                stock.BuyUfeIndex = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
+                stock.SellUfeIndex = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
                 stock.CurrentPrice = (await GetCurrentPriceAsync(stock)).CurrentPrice;
-                decimal buyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
-
+                stock.BuyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
+                stock.SellRate = currentRate;
                 decimal inflationAdjustedBuyPrice = stock.BuyPrice;
-                
-                if (sellUfe / buyUfe > 1.1m) // Inflation adjustment applies only if there is more than 10% increase
+
+                if (stock.SellUfeIndex / stock.BuyUfeIndex > 1.1m) // Inflation adjustment applies only if there is more than 10% increase
                 {
-                    inflationAdjustedBuyPrice *= sellUfe / buyUfe;
+                    inflationAdjustedBuyPrice *= stock.SellUfeIndex / stock.BuyUfeIndex;
                 }
-                decimal profit = (stock.CurrentPrice * currentRate - inflationAdjustedBuyPrice * buyRate) * stock.BuyAmount;
+                decimal profit = (stock.CurrentPrice * stock.SellRate - inflationAdjustedBuyPrice * stock.BuyRate) * stock.BuyAmount;
                 stock.Profit = profit > 0 ? profit : 0;
                 stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
                 income += profit;
@@ -268,7 +270,6 @@ namespace MidasTaxCalculatorSite.Pages
 
             throw new Exception($"ÜFE değeri bulunamadı: {key}");
         }
-
         public IActionResult OnPostClear()
         {
             LoadUserKeysFromSession();
@@ -298,7 +299,6 @@ namespace MidasTaxCalculatorSite.Pages
 
             return result?.Items ?? new List<UfeItem>();
         }
-
         public void SaveStocksToSession()
         {
             var json = JsonSerializer.Serialize(CreatedStocks);
