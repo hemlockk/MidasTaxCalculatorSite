@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
-using Newtonsoft.Json;
 using System.Globalization;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 namespace MidasTaxCalculatorSite.Pages
 {
     public class IndexModel : PageModel
@@ -55,10 +55,23 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal CurrentPrice { get; set; }
             public decimal Profit { get; set; }
             public decimal MinTaxRateApplied { get; set; }
+            public decimal BuyUfeIndex { get; set; }
+            public decimal SellUfeIndex { get; set; }
         }
         public decimal CalculatedTax { get; private set; }
         public bool HasResult { get; private set; }
-        public List<decimal> LastUfeValues { get; set; } = new();
+        public class UfeItem
+        {
+            [JsonPropertyName("Tarih")]
+            public string UFEdate { get; set; }   // "2025-1"
+            [JsonPropertyName("TP_TUFE1YI_T1")]
+            public string UFEValue { get; set; }  // "3861.33"
+        }
+        public class UfeResponse
+        {
+            [JsonPropertyName("items")]
+            public List<UfeItem> Items { get; set; }
+        }
         public async Task<Stock> GetCurrentPriceAsync(Stock stock)
         {
             // alphavantage API
@@ -129,27 +142,38 @@ namespace MidasTaxCalculatorSite.Pages
         }
         private async Task<decimal> CalculateTaxAsync(List<Stock> stocks)
         {
-            var ufeValues = await FetchUfeFromWebAsync();
+            List<UfeItem> Items = await GetUfeIndexValuesAsync();
+            var ufeDict = Items
+            .Where(x => !string.IsNullOrEmpty(x.UFEValue))
+            .ToDictionary(
+                x => x.UFEdate,
+                x => decimal.Parse(x.UFEValue, CultureInfo.InvariantCulture)
+            );
             decimal income = 0;
-            decimal currentRate = await GetLatestUsdTryRateAsync();
+            decimal currentRate = await GetUsdTryRateAsync(DateTime.Today.AddDays(-1));
             foreach (var stock in stocks)
             {
+                decimal buyUfe = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
+                decimal sellUfe = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
                 stock.CurrentPrice = (await GetCurrentPriceAsync(stock)).CurrentPrice;
-                decimal buyRate = await GetUsdTryRateAsync(stock.BuyDate);
+                decimal buyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
+
                 decimal inflationAdjustedBuyPrice = stock.BuyPrice;
                 
-                int totalMonths = ((DateTime.Today.Year - stock.BuyDate.Year) * 12) + DateTime.Today.Month - stock.BuyDate.Month;
-
-                for (int i = 0; i < totalMonths; i++)
+                if (sellUfe / buyUfe > 1.1m) // Inflation adjustment applies only if there is more than 10% increase
                 {
-                    inflationAdjustedBuyPrice *= 1 + ufeValues[i] / 100;
+                    inflationAdjustedBuyPrice *= sellUfe / buyUfe;
                 }
                 decimal profit = (stock.CurrentPrice * currentRate - inflationAdjustedBuyPrice * buyRate) * stock.BuyAmount;
                 stock.Profit = profit > 0 ? profit : 0;
                 stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
                 income += profit;
             }
-            if (income <= 110000)
+            if (income <= 0) 
+            {
+                return 0;
+            }
+            else if (income <= 110000)
             {
                 return income * 0.15m;
             }
@@ -178,10 +202,13 @@ namespace MidasTaxCalculatorSite.Pages
             UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
-        private async Task<decimal> GetLatestUsdTryRateAsync()
+        private async Task<decimal> GetUsdTryRateAsync(DateTime date)
         {
             LoadUserKeysFromSession();
-            DateTime date = DateTime.Today;
+            if (date > DateTime.Today.AddDays(-1))
+            {
+                date = DateTime.Today.AddDays(-1);
+            }
             string evdsKey = GetEvdsKey();
             for (int i = 0; i < 10; i++) // look back up to 10 days
             {
@@ -223,47 +250,25 @@ namespace MidasTaxCalculatorSite.Pages
 
             throw new Exception("TCMB: No USD/TRY rate found in the last 10 days.");
         }
-        private async Task<decimal> GetUsdTryRateAsync(DateTime date)
+        private decimal GetUfeIndexForDate(
+            Dictionary<string, decimal> ufeDict,
+            DateTime date)
         {
-            string dateString = date.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
-            string evdsKey = GetEvdsKey();
-            if (date > DateTime.Today.AddDays(-1))
-            {
-                dateString = DateTime.Today.AddDays(-1).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
-            }
+            string key = $"{date.Year}-{date.Month}";
 
-            string url =
-                $"https://evds2.tcmb.gov.tr/service/evds/series=TP.DK.USD.S.YTL" +
-                $"&startDate={dateString}&endDate={dateString}&type=json";
+            if (ufeDict.TryGetValue(key, out var value))
+                return value;
 
-            using var client = new HttpClient();
+            // Fallback: previous month (important!)
+            var prev = date.AddMonths(-1);
+            string prevKey = $"{prev.Year}-{prev.Month}";
 
-            // Must be added as HTTP header (just like in Postman)
-            client.DefaultRequestHeaders.Add("key", evdsKey);
+            if (ufeDict.TryGetValue(prevKey, out var prevValue))
+                return prevValue;
 
-            var response = await client.GetAsync(url);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"TCMB returned error: {response.StatusCode}");
-            }
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            using var doc = JsonDocument.Parse(json);
-
-            var items = doc.RootElement.GetProperty("items");
-
-            if (items.GetArrayLength() == 0)
-            {
-                throw new Exception($"No FX data found for {dateString}");
-            }
-
-            // This matches your Postman response EXACTLY
-            string rateStr = items[0].GetProperty("TP_DK_USD_S_YTL").GetString();
-
-            return decimal.Parse(rateStr, CultureInfo.InvariantCulture);
+            throw new Exception($"ÜFE değeri bulunamadı: {key}");
         }
+
         public IActionResult OnPostClear()
         {
             LoadUserKeysFromSession();
@@ -271,58 +276,40 @@ namespace MidasTaxCalculatorSite.Pages
             UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
-        private async Task<List<decimal>> FetchUfeFromWebAsync()
+        private async Task<List<UfeItem>> GetUfeIndexValuesAsync()
         {
-            string url = "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Enflasyon+Verileri/Uretici+Fiyatlari";
+            LoadUserKeysFromSession();
+            string evdsKey = GetEvdsKey();
+            DateTime startDate = new DateTime(2014, 1, 1);
+            DateTime endDate = DateTime.Today;
+            string url =
+                $"https://evds2.tcmb.gov.tr/service/evds/series=TP.TUFE1YI.T1" +
+                $"&startDate={startDate:dd-MM-yyyy}" +
+                $"&endDate={endDate:dd-MM-yyyy}" +
+                $"&type=json";
 
             using var client = new HttpClient();
-            string html = await client.GetStringAsync(url);
+            client.DefaultRequestHeaders.Add("key", evdsKey);
 
-            var doc = new HtmlAgilityPack.HtmlDocument();
-            doc.LoadHtml(html);
+            var json = await client.GetStringAsync(url);
 
-            var ufeValues = new List<decimal>();
+            var result = JsonSerializer.Deserialize<UfeResponse>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            // Find all rows in tables
-            var rows = doc.DocumentNode.SelectNodes("//table//tr");
-
-            if (rows == null)
-                return ufeValues;
-
-            foreach (var row in rows)
-            {
-                var cells = row.SelectNodes("td");
-                if (cells == null || cells.Count < 5)
-                    continue;
-
-                // Month:
-                string monthText = cells[0].InnerText.Trim();
-
-                // UFE column (5th column)
-                string ufeText = cells[4].InnerText.Trim()
-                                .Replace(",", "."); // decimal fix for TR locale
-
-                if (decimal.TryParse(ufeText, System.Globalization.NumberStyles.Any, 
-                                    System.Globalization.CultureInfo.InvariantCulture, 
-                                    out decimal ufeValue))
-                {
-                    ufeValues.Add(ufeValue);
-                }
-            }
-
-            // Return last 6 months only (like your Python code)
-            return ufeValues;
+            return result?.Items ?? new List<UfeItem>();
         }
+
         public void SaveStocksToSession()
         {
-            var json = JsonConvert.SerializeObject(CreatedStocks);
+            var json = JsonSerializer.Serialize(CreatedStocks);
             HttpContext.Session.SetString("Stocks", json);
         }
         public void LoadStocksFromSession()
         {
             var json = HttpContext.Session.GetString("Stocks");
             if (!string.IsNullOrEmpty(json))
-                CreatedStocks = JsonConvert.DeserializeObject<List<Stock>>(json);
+                CreatedStocks = JsonSerializer.Deserialize<List<Stock>>(json)
+                ?? new List<Stock>();
         }
         public IActionResult OnPostDeleteStock(int index)
         {
