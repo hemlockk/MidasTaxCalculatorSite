@@ -34,10 +34,9 @@ namespace MidasTaxCalculatorSite.Pages
         [BindProperty]
         public string? UserYahooKey { get; set; }
         public decimal TotalTax { get; set; }
+        public decimal TotalProfit { get; set; }
         public bool TaxCalculated { get; set; }
         public DateTime FxDate { get; set; } = DateTime.Today;
-        public decimal? FxRate { get; set; }
-        public bool FxHasResult { get; set; }
         [BindProperty]
         public Stock UserInput { get; set; } = new();
         [BindProperty]
@@ -60,7 +59,6 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal BuyRate { get; set; }
             public decimal SellRate { get; set; }
         }
-        public decimal CalculatedTax { get; private set; }
         public bool HasResult { get; private set; }
         public class UfeItem
         {
@@ -171,6 +169,7 @@ namespace MidasTaxCalculatorSite.Pages
                 stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
                 income += profit;
             }
+            TotalProfit = income; // Store total profit for display
             if (income <= 0) 
             {
                 return 0;

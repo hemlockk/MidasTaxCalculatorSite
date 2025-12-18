@@ -1,9 +1,6 @@
 ﻿@page
 @model MidasTaxCalculatorSite.Pages.IndexModel
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
 
 <script>
     $(function () {
@@ -11,301 +8,419 @@
                                               .removeData("unobtrusiveValidation");
     });
 </script>
+<body style="
+  min-height:100vh;
+  background-image:url('/images/background.png');
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:3rem 1.5rem;
+">
+    <header>
+        <div style="
+        width:100%;
+        max-width:1400px;
+        margin-bottom:1.8rem;
+        background:white;
+        padding:1.2rem 2rem;
+        border-radius:16px;
+        box-shadow:0 10px 28px rgba(0,0,0,0.18);
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        ">
 
+        <!-- LEFT: Logo + Title -->
+        <div style="display:flex; align-items:center; gap:0.9rem;">
+            <img src="/images/logo.jpg"
+                alt="Logo"
+                style="
+                height:60px;
+                width:60px;
+                object-fit:contain;
+                border-radius:8px;
+                " />
 
-<div style="margin-bottom:15px; font-size:15px; line-height:1.5;">
-    <p>
-        ABD borsalarından elde edilen alım satım kazançları, beyana tabi tutulmalıdır.
-        Bu kazançlar Türk Lirası cinsinden hesaplanmalıdır. Dolar/TL dönüşümlerinde,
-        işlem gününden bir önceki günün Türkiye Cumhuriyeti Merkez Bankası kapanış kuru temel alınmalıdır.
-        Alım satım kazancının hesaplanması sırasında endeksleme yöntemini kullanabilmek için
-        Yİ-ÜFE farkının %10 üzerinde olması gerekmektedir. İşlem yapılan tarihin bir ay önceki ÜFE endeksi baz alınarak
-        alım fiyatı endekslenir.
-    </p>
-
-    <p>
-        Uygulamanın kullanımı için hisse kodunuzu, hisseyi aldığınız tarihi, alınan hisse miktarını ve hisseyi aldığınız tarihteki dolar bazlı fiyatını girmeniz yeterlidir.
-        İstenilen bilgiler eklendikten sonra "Vergiyi Hesapla" butonuna tıklayarak vergi hesaplamasını gerçekleştirebilirsiniz. Vergi hesaplamanızda hissenin güncel fiyatı baz alınacaktır.
-        Belirtlen bilgilere Midas uygulamasındali İşlem Geçmişi sekmesinden ulaşabilirsiniz.  
-    </p>
-    <p>Örnek İşlem Geçmişi ekran görüntüsü:</p>
-
-    <button class="btn btn-secondary mb-2" type="button"
-            data-bs-toggle="collapse" data-bs-target="#exampleImages">
-        Görselleri Göster / Gizle
-    </button>
-
-    <div class="collapse" id="exampleImages">
-        <div class="text-left my-4 d-flex gap-3">
-            <img src="~/images/MidasStockCode.jpg"
-                alt="Midas Stock Code"
-                class="img-fluid"
-                style="max-width: 250px;">
-
-            <img src="~/images/MidasInfo.jpg"
-                alt="Midas Info"
-                class="img-fluid"
-                style="max-width: 250px;">
+            <div>
+            <div style="
+                font-size:1.15rem;
+                font-weight:700;
+                color:#0f172a;
+                line-height:1.2;
+            ">
+                Midas Vergi Hesaplama
+            </div>
+            <div style="
+                font-size:0.8rem;
+                color:#6b7280;
+            ">
+                ABD Hisseleri · Vergi Aracı
+            </div>
+            </div>
         </div>
+
+        <!-- RIGHT: Optional status / tag -->
+        <div style="
+            font-size:0.75rem;
+            padding:0.35rem 0.7rem;
+            border-radius:999px;
+            background:#eef2ff;
+            color:#4338ca;
+            font-weight:600;
+        ">
+            Beta
+        </div>
+
+        </div>
+    </header>
+<div style="
+    background:white;
+    width:100%;
+    max-width:1400px;
+    padding:3rem 3.5rem;
+    border-radius:18px;
+    box-shadow:0 20px 45px rgba(0,0,0,0.25);
+  ">
+    <div style="margin-bottom:15px; font-size:15px; line-height:1.5;">
+        <p>
+            ABD borsalarından elde edilen alım satım kazançları, beyana tabi tutulmalıdır.
+            Bu kazançlar Türk Lirası cinsinden hesaplanmalıdır. Dolar/TL dönüşümlerinde,
+            işlem gününden bir önceki günün Türkiye Cumhuriyeti Merkez Bankası kapanış kuru temel alınmalıdır.
+            Alım satım kazancının hesaplanması sırasında endeksleme yöntemini kullanabilmek için
+            Yİ-ÜFE farkının %10 üzerinde olması gerekmektedir. İşlem yapılan tarihin bir ay önceki ÜFE endeksi baz alınarak
+            alım fiyatı endekslenir.
+        </p>
+
+        <p>
+            Uygulamanın kullanımı için hisse kodunuzu, hisseyi aldığınız tarihi, alınan hisse miktarını ve hisseyi aldığınız tarihteki dolar bazlı fiyatını girmeniz yeterlidir.
+            İstenilen bilgiler eklendikten sonra "Vergiyi Hesapla" butonuna tıklayarak vergi hesaplamasını gerçekleştirebilirsiniz. Vergi hesaplamanızda hissenin güncel fiyatı baz alınacaktır.
+            Belirtlen bilgilere Midas uygulamasındali İşlem Geçmişi sekmesinden ulaşabilirsiniz.  
+        </p>
+        <p>Örnek İşlem Geçmişi ekran görüntüsü:</p>
+
+        <button class="btn btn-secondary mb-2" type="button"
+                data-bs-toggle="collapse" data-bs-target="#exampleImages">
+            Görselleri Göster / Gizle
+        </button>
+
+        <div class="collapse" id="exampleImages">
+            <div class="text-left my-4 d-flex gap-3">
+                <img src="~/images/MidasStockCode.jpg"
+                    alt="Midas Stock Code"
+                    class="img-fluid"
+                    style="max-width: 250px;">
+
+                <img src="~/images/MidasInfo.jpg"
+                    alt="Midas Info"
+                    class="img-fluid"
+                    style="max-width: 250px;">
+            </div>
+        </div>
+
+
+        <p style="color:red; font-weight:bold;">
+            ÖNEMLİ UYARI: Bu uygulama sadece kendi hesaplamanızı karşılaştırmak amacıyla hazırlanmıştır.
+            Hesaplanan değerlerin doğruluğu garanti edilmemektedir.
+        </p>
     </div>
 
+    <script>
+        function validateWeekend() {
+            const dateValue = document.getElementById('buyDate').value;
+            if (!dateValue) return true; // allow empty check to server
 
-    <p style="color:red; font-weight:bold;">
-        ÖNEMLİ UYARI: Bu uygulama sadece kendi hesaplamanızı karşılaştırmak amacıyla hazırlanmıştır.
-        Hesaplanan değerlerin doğruluğu garanti edilmemektedir.
-    </p>
-</div>
+            const date = new Date(dateValue + "T00:00:00"); 
+            const day = date.getDay(); // Local day: 0=Sunday, 6=Saturday
+
+            if (day === 0 || day === 6) {
+                alert("Buy Date cannot be a weekend day!");
+                return false; // Block form submit
+            }
+
+            return true; // allow submit
+        }
+    </script>
+
+    <h2>Hisse Ekle</h2>
+
+    <form method="post" asp-page-handler="AddStock" class="mt-3">
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <label class="form-label">Hisse Kodu</label>
+                <input asp-for="UserInput.StockCode"
+                    class="form-control"
+                    maxlength="5"
+                    required
+                    pattern="[A-Za-z]{1,5}" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Satın Alım Tarihi</label>
+                <input type="date"
+                    asp-for="UserInput.BuyDate"
+                    class="form-control"
+                    id="buyDate"
+                    required />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Hisse Miktarı</label>
+                <input asp-for="UserInput.BuyAmount"
+                    type="number"
+                    class="form-control"
+                    step="0.01"
+                    required
+                        />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Alım Fiyatı ($)</label>
+                <input asp-for="UserInput.BuyPrice"
+                    type="number"
+                    step="0.01"
+                    class="form-control"
+                    required />
+            </div>
+
+        </div>
+
+        <!-- Validation messages displayed here instead -->
+        <div class="row">
+            <div class="col-md-12 mt-1">
+                <span asp-validation-for="UserInput.StockCode" class="text-danger d-block"></span>
+                <span asp-validation-for="UserInput.BuyDate" class="text-danger d-block"></span>
+                <span asp-validation-for="UserInput.BuyAmount" class="text-danger d-block"></span>
+                <span asp-validation-for="UserInput.BuyPrice" class="text-danger d-block"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Hisse Ekle</button>
+
+    </form>
+
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                Eklenen Hisseler
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Hisse</th>
+                            <th>Alış Fiyatı ($)</th>
+                            <th>Alış Tarihi</th>
+                            <th>Adet</th>
+                            <th>Sil</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.CreatedStocks.Count; i++)
+                        {
+                            <tr>
+                                <td>@Model.CreatedStocks[i].StockCode</td>
+                                <td>@Model.CreatedStocks[i].BuyPrice.ToString("N2")</td>
+                                <td>@Model.CreatedStocks[i].BuyDate.ToString("dd.MM.yyyy")</td>
+                                <td>@Model.CreatedStocks[i].BuyAmount</td>
+                                <td>
+                                    <form method="post" asp-page-handler="DeleteStock" style="display:inline;">
+                                        <input type="hidden" name="index" value="@i" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            🗑
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer d-flex gap-3">
+                <form method="post" asp-page-handler="CalculateTax" class="me-2">
+                    <button type="submit" class="btn btn-success btn-sm">Vergiyi Hesapla</button>
+                    @for (int i = 0; i < Model.CreatedStocks.Count; i++) 
+                    { 
+                        <input type="hidden" asp-for="CreatedStocks[i].StockCode" /> 
+                        <input type="hidden" asp-for="CreatedStocks[i].BuyDate" /> 
+                        <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" /> 
+                        <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" /> 
+                        <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" /> 
+                    }
+                </form>
+
+                <form method="post" asp-page-handler="Clear">
+                    <button type="submit" class="btn btn-danger btn-sm">Tümünü Temizle</button>
+                </form>
+            </div>
+        </div>
+
+
+    @if (Model.TaxCalculated)
+    {
+        <h3 class="mt-4 mb-3">Vergi Hesaplama Sonucu</h3>
+
+        <table class="table table-striped table-bordered align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Hisse</th>
+                    <th>Alış Tarihi</th>
+                    <th>Pay Adedi</th>
+                    <th>Kar (TL)</th>
+                    <th>Min. Vergi (15%)</th>
+                    <th>Detay</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (int i = 0; i < Model.CreatedStocks.Count; i++)
+                {
+                    var s = Model.CreatedStocks[i];
+                    var detailId = $"details-{i}";
+
+                    <tr>
+                        <td>@s.StockCode</td>
+                        <td>@s.BuyDate.ToString("dd.MM.yyyy")</td>
+                        <td>@s.BuyAmount</td>
+                        <td>@s.Profit.ToString("N2") TL</td>
+                        <td>@s.MinTaxRateApplied.ToString("N2") TL</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#@detailId">
+                                Detay
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Details row -->
+                    <tr class="collapse bg-light" id="@detailId">
+                        <td colspan="6" class="text-start">
+                            <div class="p-3">
+                                <strong>Detaylı Hesaplama</strong>
+                                @{
+                                    var inflationFactorPercent =
+                                        s.BuyUfeIndex > 0
+                                            ? (s.SellUfeIndex / s.BuyUfeIndex - 1) * 100
+                                            : 0;
+                                }
+                                <ul class="mb-0 mt-2">
+                                    <li><strong>Alış ÜFE Endeksi:</strong> @s.BuyUfeIndex.ToString("N2")</li>
+                                    <li><strong>Satış ÜFE Endeksi:</strong> @s.SellUfeIndex.ToString("N2")</li>
+                                    <li>
+                                        <strong>ÜFE Farkı:</strong>
+                                        @inflationFactorPercent.ToString("N2") %
+                                    </li>
+                                    <li><strong>Alış Kur (USD/TRY):</strong> @s.BuyRate.ToString("N4")</li>
+                                    <li><strong>Satış Kur (USD/TRY):</strong> @s.SellRate.ToString("N4")</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        <tfoot class="table-secondary fw-bold text-center">
+                <tr>
+                    <td colspan="2">
+                        Brüt Gelir<br />
+                        <span class="@(Model.TotalProfit >= 0 ? "text-success" : "text-danger")">
+                            @Model.TotalProfit.ToString("N2") TL
+                        </span>
+                    </td>
+
+                    <td colspan="2">
+                        Toplam Vergi<br />
+                        <span class="text-danger">
+                            @Model.TotalTax.ToString("N2") TL
+                        </span>
+                    </td>
+
+                    <td colspan="2">
+                        Vergi Sonrası Net Gelir<br />
+                        @{
+                            var netIncome = Model.TotalProfit - Model.TotalTax;
+                        }
+                        <span class="@(netIncome >= 0 ? "text-success" : "text-danger")">
+                            @netIncome.ToString("N2") TL
+                        </span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+
+    <div class="card mt-4 mb-4">
+        <div class="card-header bg-info text-white">
+            API Anahtarlarınız (İsteğe Bağlı)
+        </div>
+
+        <div class="card-body">
+
+            <div class="alert alert-warning small" role="alert">
+                EVDS anahtarı ve <strong>AlphaVantage veya Yahoo Finance</strong> 
+                anahtarlarından en az birinin girilmesi gerekir. Bu alanlar boş 
+                bırakılırsa uygulama varsayılan anahtarları kullanır. Varsayılan 
+                anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir.
+            </div>
+
+            <form method="post" asp-page-handler="SaveKeys" novalidate data-val="false">
+                <div class="row g-3">
+                    <div class="col-md-4 position-relative">
+                        <label class="form-label">EVDS API Key</label>
+                        <input asp-for="UserEvdsKey"
+                            class="form-control"
+                            placeholder="Varsayılan anahtar kullanılacak">
+                        @if (Model.HasUserEvdsKey)
+                        {
+                            <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
+                        }
+                    </div>
+                    <div class="col-md-4 position-relative">
+                        <label class="form-label">AlphaVantage API Key</label>
+                        <input asp-for="UserAlphaKey"
+                            class="form-control"
+                            placeholder="İsteğe bağlı">
+                        @if (Model.HasUserAlphaKey)
+                        {
+                            <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
+                        }
+                    </div>
+
+                    <div class="col-md-4 position-relative">
+                        <label class="form-label">Yahoo API Key</label>
+                        <input asp-for="UserYahooKey"
+                            class="form-control"
+                            placeholder="İsteğe bağlı">
+                        @if (Model.HasUserYahooKey)
+                        {
+                            <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
+                        }
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-info text-white mt-3">
+                    Anahtarları Kaydet
+                </button>
+            </form>
+
+        </div>
+    </div>
 
 <script>
-    function validateWeekend() {
-        const dateValue = document.getElementById('buyDate').value;
-        if (!dateValue) return true; // allow empty check to server
-
-        const date = new Date(dateValue + "T00:00:00"); 
-        const day = date.getDay(); // Local day: 0=Sunday, 6=Saturday
-
-        if (day === 0 || day === 6) {
-            alert("Buy Date cannot be a weekend day!");
-            return false; // Block form submit
+    document.addEventListener("DOMContentLoaded", () => {
+        const scrollPos = sessionStorage.getItem("scrollPos");
+        if (scrollPos) {
+            window.scrollTo(0, parseInt(scrollPos));
+            sessionStorage.removeItem("scrollPos");
         }
+    });
 
-        return true; // allow submit
-    }
+    window.addEventListener("beforeunload", () => {
+        sessionStorage.setItem("scrollPos", window.scrollY);
+    });
 </script>
-
-<h2>Hisse Ekle</h2>
-
-<form method="post" asp-page-handler="AddStock" class="mt-3">
-
-    <div class="row g-3">
-
-        <div class="col-md-3">
-            <label class="form-label">Hisse Kodu</label>
-            <input asp-for="UserInput.StockCode"
-                   class="form-control"
-                   maxlength="5"
-                   required
-                   pattern="[A-Za-z]{1,5}" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Satın Alım Tarihi</label>
-            <input type="date"
-                   asp-for="UserInput.BuyDate"
-                   class="form-control"
-                   id="buyDate"
-                   required />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Hisse Miktarı</label>
-            <input asp-for="UserInput.BuyAmount"
-                   type="number"
-                   class="form-control"
-                   step="0.01"
-                   required
-                    />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Alım Fiyatı ($)</label>
-            <input asp-for="UserInput.BuyPrice"
-                   type="number"
-                   step="0.01"
-                   class="form-control"
-                   required />
-        </div>
-
-    </div>
-
-    <!-- Validation messages displayed here instead -->
-    <div class="row">
-        <div class="col-md-12 mt-1">
-            <span asp-validation-for="UserInput.StockCode" class="text-danger d-block"></span>
-            <span asp-validation-for="UserInput.BuyDate" class="text-danger d-block"></span>
-            <span asp-validation-for="UserInput.BuyAmount" class="text-danger d-block"></span>
-            <span asp-validation-for="UserInput.BuyPrice" class="text-danger d-block"></span>
-        </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary mt-2">Hisse Ekle</button>
-
-</form>
-
-    <div class="card mt-4">
-        <div class="card-header bg-primary text-white">
-            Eklenen Hisseler
-        </div>
-
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0 align-middle text-center">
-                <thead class="table-light">
-                    <tr>
-                        <th>Hisse</th>
-                        <th>Alış Fiyatı ($)</th>
-                        <th>Alış Tarihi</th>
-                        <th>Adet</th>
-                        <th>Sil</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < Model.CreatedStocks.Count; i++)
-                    {
-                        <tr>
-                            <td>@Model.CreatedStocks[i].StockCode</td>
-                            <td>@Model.CreatedStocks[i].BuyPrice.ToString("N2")</td>
-                            <td>@Model.CreatedStocks[i].BuyDate.ToString("dd.MM.yyyy")</td>
-                            <td>@Model.CreatedStocks[i].BuyAmount</td>
-                            <td>
-                                <form method="post" asp-page-handler="DeleteStock" style="display:inline;">
-                                    <input type="hidden" name="index" value="@i" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        🗑
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <div class="card-footer d-flex gap-3">
-            <form method="post" asp-page-handler="CalculateTax" class="me-2">
-                <button type="submit" class="btn btn-success btn-sm">Vergiyi Hesapla</button>
-                @for (int i = 0; i < Model.CreatedStocks.Count; i++) 
-                { 
-                    <input type="hidden" asp-for="CreatedStocks[i].StockCode" /> 
-                    <input type="hidden" asp-for="CreatedStocks[i].BuyDate" /> 
-                    <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" /> 
-                    <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" /> 
-                    <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" /> 
-                }
-            </form>
-
-            <form method="post" asp-page-handler="Clear">
-                <button type="submit" class="btn btn-danger btn-sm">Tümünü Temizle</button>
-            </form>
-        </div>
-    </div>
-
-
-@if (Model.TaxCalculated)
-{
-    <h3 class="mt-4 mb-3">Vergi Hesaplama Sonucu</h3>
-
-    <table class="table table-striped table-bordered align-middle text-center">
-        <thead class="table-dark">
-            <tr>
-                <th>Hisse</th>
-                <th>Alış Tarihi</th>
-                <th>Pay Adedi</th>
-                <th>Kar (TL)</th>
-                <th>Min. Vergi (15%)</th>
-                <th>Detay</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @for (int i = 0; i < Model.CreatedStocks.Count; i++)
-            {
-                var s = Model.CreatedStocks[i];
-                var detailId = $"details-{i}";
-
-                <tr>
-                    <td>@s.StockCode</td>
-                    <td>@s.BuyDate.ToString("dd.MM.yyyy")</td>
-                    <td>@s.BuyAmount</td>
-                    <td>@s.Profit.ToString("N2") TL</td>
-                    <td>@s.MinTaxRateApplied.ToString("N2") TL</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary"
-                                type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#@detailId">
-                            Detay
-                        </button>
-                    </td>
-                </tr>
-
-                <!-- Details row -->
-                <tr class="collapse bg-light" id="@detailId">
-                    <td colspan="6" class="text-start">
-                        <div class="p-3">
-                            <strong>Detaylı Hesaplama</strong>
-                            <ul class="mb-0 mt-2">
-                                <li><strong>Alış ÜFE Endeksi:</strong> @s.BuyUfeIndex</li>
-                                <li><strong>Satış ÜFE Endeksi:</strong> @s.SellUfeIndex</li>
-                                <li><strong>Alış Kur (USD/TRY):</strong> @s.BuyRate.ToString("N4")</li>
-                                <li><strong>Satış Kur (USD/TRY):</strong> @s.SellRate.ToString("N4")</li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            }
-        </tbody>
-
-        <tfoot class="table-secondary fw-bold">
-            <tr>
-                <td colspan="5" class="text-end">Toplam Vergi:</td>
-                <td>@Model.TotalTax.ToString("N2") TL</td>
-            </tr>
-        </tfoot>
-    </table>
-}
-
-<div class="card mt-4 mb-4">
-    <div class="card-header bg-info text-white">
-        API Anahtarlarınız (İsteğe Bağlı)
-    </div>
-
-    <div class="card-body">
-
-        <div class="alert alert-warning small" role="alert">
-            EVDS anahtarı ve <strong>AlphaVantage veya Yahoo Finance</strong> 
-            anahtarlarından en az birinin girilmesi gerekir. Bu alanlar boş 
-            bırakılırsa uygulama varsayılan anahtarları kullanır. Varsayılan 
-            anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir.
-        </div>
-
-        <form method="post" asp-page-handler="SaveKeys" novalidate data-val="false">
-            <div class="row g-3">
-                <div class="col-md-4 position-relative">
-                    <label class="form-label">EVDS API Key</label>
-                    <input asp-for="UserEvdsKey"
-                        class="form-control"
-                        placeholder="Varsayılan anahtar kullanılacak">
-                    @if (Model.HasUserEvdsKey)
-                    {
-                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
-                    }
-                </div>
-                <div class="col-md-4 position-relative">
-                    <label class="form-label">AlphaVantage API Key</label>
-                    <input asp-for="UserAlphaKey"
-                        class="form-control"
-                        placeholder="İsteğe bağlı">
-                    @if (Model.HasUserAlphaKey)
-                    {
-                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
-                    }
-                </div>
-
-                <div class="col-md-4 position-relative">
-                    <label class="form-label">Yahoo API Key</label>
-                    <input asp-for="UserYahooKey"
-                        class="form-control"
-                        placeholder="İsteğe bağlı">
-                    @if (Model.HasUserYahooKey)
-                    {
-                        <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
-                    }
-                </div>
-            </div>
-            <button type="submit" class="btn btn-info text-white mt-3">
-                Anahtarları Kaydet
-            </button>
-        </form>
-
-    </div>
 </div>
+</body>
