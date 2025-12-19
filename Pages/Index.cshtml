@@ -7,6 +7,20 @@
         $("form[asp-page-handler='SaveKeys']").removeData("validator") 
                                               .removeData("unobtrusiveValidation");
     });
+     function toggleExample() {
+            const box = document.getElementById("exampleBox");
+            const btn = event.target;
+
+            if (box.style.maxHeight === "0px" || box.style.maxHeight === "") {
+            box.style.maxHeight = box.scrollHeight + "px";
+            box.style.opacity = "1";
+            btn.innerText = "Gizle";
+            } else {
+            box.style.maxHeight = "0";
+            box.style.opacity = "0";
+            btn.innerText = "Göster";
+            }
+        }
 </script>
 <body style="
   min-height:100vh;
@@ -87,10 +101,111 @@
             Bu kazançlar Türk Lirası cinsinden hesaplanmalıdır. Dolar/TL dönüşümlerinde,
             işlem gününden bir önceki günün Türkiye Cumhuriyeti Merkez Bankası kapanış kuru temel alınmalıdır.
             Alım satım kazancının hesaplanması sırasında endeksleme yöntemini kullanabilmek için
-            Yİ-ÜFE farkının %10 üzerinde olması gerekmektedir. İşlem yapılan tarihin bir ay önceki ÜFE endeksi baz alınarak
+            Yİ-ÜFE farkının %10 üzerinde olması gerekmektedir. İşlem tarihlerinin bir ay önceki ÜFE endeksi baz alınarak
             alım fiyatı endekslenir.
         </p>
+            <div style="margin-bottom:2.5rem;">
 
+        <div style="
+        display:flex;
+        align-items:center;
+        gap:0.75rem;
+        margin-bottom:1rem;
+        ">
+        <h3 style="
+            font-size:1.2rem;
+            font-weight:700;
+            margin:0;
+            color:#0f172a;
+        ">
+            📌 Örnek Hesaplama
+        </h3>
+
+        <button
+            type="button"
+            onclick="toggleExample()"
+            style="
+            font-size:0.8rem;
+            padding:0.3rem 0.7rem;
+            border-radius:999px;
+            border:1px solid #d1d5db;
+            background:#f9fafb;
+            cursor:pointer;
+            line-height:1;
+            "
+        >
+            Göster
+        </button>
+        </div>
+        <div id="exampleBox" style="
+        overflow:hidden;
+        max-height:0;
+        opacity:0;
+        transition:max-height 0.35s ease, opacity 0.25s ease;
+        ">
+            <div style="
+                background:#f9fafb;
+                border:1px solid #e5e7eb;
+                border-radius:12px;
+                padding:1.25rem 1.5rem;
+                margin-bottom:1.2rem;
+            ">
+                <strong>İşlem Bilgileri</strong>
+                <ul style="margin-top:0.6rem; padding-left:1.2rem;">
+                <li><strong>Alış Tarihi:</strong> 20 Eylül 2023</li>
+                <li><strong>Satış Tarihi:</strong> 19 Aralık 2025</li>
+                </ul>
+            </div>
+
+            <div style="
+                background:#f9fafb;
+                border:1px solid #e5e7eb;
+                border-radius:12px;
+                padding:1.25rem 1.5rem;
+                margin-bottom:1.2rem;
+            ">
+                <strong>Yİ-ÜFE Endeks Bilgileri</strong>
+                <ul style="margin-top:0.6rem; padding-left:1.2rem;">
+                <li><strong>Ağustos 2023 ÜFE Endeksi:</strong> 2.659,60</li>
+                <li><strong>Kasım 2025 ÜFE Endeksi:</strong> 4.747,63</li>
+                <li><strong>ÜFE Farkı:</strong> %78,51</li>
+                </ul>
+            </div>
+
+            <div style="
+                background:#f9fafb;
+                border:1px solid #e5e7eb;
+                border-radius:12px;
+                padding:1.25rem 1.5rem;
+                margin-bottom:1.2rem;
+            ">
+                <strong>TCMB Döviz Kurları (USD/TRY)</strong>
+                <ul style="margin-top:0.6rem; padding-left:1.2rem;">
+                <li><strong>19 Eylül 2023 kapanış Kuru:</strong> 27,0300</li>
+                <li><strong>18 Aralık 2025 kapanış Kuru:</strong> 42,7285</li>
+                </ul>
+            </div>
+
+            <p style="margin-bottom:0.8rem;">
+                Yİ-ÜFE farkı <strong>%10’un üzerinde</strong> olduğu için,
+                <strong>endeksleme yöntemi uygulanabilir</strong>.
+                Bu durumda alış bedeli, alış tarihine ait ÜFE endeksi dikkate alınarak güncellenir.
+            </p>
+
+            <p style="margin-bottom:0.8rem;">
+                ABD borsalarında yapılan işlemlerden elde edilen kazançlar,
+                Türk Lirası cinsinden hesaplanmak zorundadır.
+                Bu nedenle alış ve satış tutarları, ilgili tarihlerdeki
+                <strong>TCMB USD/TRY kapanış kurları</strong> kullanılarak TL’ye çevrilir.
+            </p>
+
+            <p>
+                Son olarak, <strong>endekslenmiş alış bedeli</strong> ile
+                <strong>satış bedeli</strong> arasındaki fark,
+                vergilendirilebilir kazancı oluşturur.
+            </p>
+            </div>
+        </div>
         <p>
             Uygulamanın kullanımı için hisse kodunuzu, hisseyi aldığınız tarihi, alınan hisse miktarını ve hisseyi aldığınız tarihteki dolar bazlı fiyatını girmeniz yeterlidir.
             İstenilen bilgiler eklendikten sonra "Vergiyi Hesapla" butonuna tıklayarak vergi hesaplamasını gerçekleştirebilirsiniz. Vergi hesaplamanızda hissenin güncel fiyatı baz alınacaktır.
