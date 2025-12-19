@@ -2,10 +2,17 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
 using System.Globalization;
+using System.Net;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 namespace MidasTaxCalculatorSite.Pages
 {
+    public class ApiAuthorizationException : Exception
+    {
+        public ApiAuthorizationException(string message) : base(message)
+        {
+        }
+    }
     public class IndexModel : PageModel
     {
         private readonly IConfiguration _config;
@@ -142,6 +149,7 @@ namespace MidasTaxCalculatorSite.Pages
         }
         private async Task<decimal> CalculateTaxAsync(List<Stock> stocks)
         {
+            decimal currentRate = await GetUsdTryRateAsync(DateTime.Today.AddDays(-1));
             List<UfeItem> Items = await GetUfeIndexValuesAsync();
             var ufeDict = Items
             .Where(x => !string.IsNullOrEmpty(x.UFEValue))
@@ -150,7 +158,6 @@ namespace MidasTaxCalculatorSite.Pages
                 x => decimal.Parse(x.UFEValue, CultureInfo.InvariantCulture)
             );
             decimal income = 0;
-            decimal currentRate = await GetUsdTryRateAsync(DateTime.Today.AddDays(-1));
             foreach (var stock in stocks)
             {
                 stock.BuyUfeIndex = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
@@ -197,11 +204,19 @@ namespace MidasTaxCalculatorSite.Pages
         }
         public async Task<IActionResult> OnPostCalculateTaxAsync()
         {
-            // created stocks list must already be populated from your Add Stock function
-            TotalTax = await CalculateTaxAsync(CreatedStocks);
-            TaxCalculated = true;
-            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
-            return Page();
+                try
+                {
+                    TotalTax = await CalculateTaxAsync(CreatedStocks);
+                    TaxCalculated = true;
+                }
+                catch (ApiAuthorizationException ex)
+                {
+                    ModelState.AddModelError(string.Empty, ex.Message);
+                    TaxCalculated = false;
+                }
+
+                UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
+                return Page();
         }
         private async Task<decimal> GetUsdTryRateAsync(DateTime date)
         {
@@ -221,11 +236,32 @@ namespace MidasTaxCalculatorSite.Pages
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("key", evdsKey);
 
-                string json = await client.GetStringAsync(url);
+                using var response = await client.GetAsync(url);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    throw new ApiAuthorizationException(
+                        "EVDS API anahtarı hatalı, süresi dolmuş veya kullanım limiti aşılmış olabilir."
+                    );
+                }
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    throw new ApiAuthorizationException(
+                        "EVDS API anahtarı yetkisiz (401). Lütfen anahtarı kontrol ediniz."
+                    );
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"EVDS API hatası: {(int)response.StatusCode}");
+                }
+
+                string json = await response.Content.ReadAsStringAsync();
 
                 using var doc = JsonDocument.Parse(json);
-
                 var items = doc.RootElement.GetProperty("items");
+
 
                 if (items.GetArrayLength() > 0)
                 {

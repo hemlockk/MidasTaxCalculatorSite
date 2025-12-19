@@ -2,6 +2,7 @@
 @model MidasTaxCalculatorSite.Pages.IndexModel
 
 
+
 <script>
     $(function () {
         $("form[asp-page-handler='SaveKeys']").removeData("validator") 
@@ -372,7 +373,15 @@
             </div>
         </div>
 
-
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger mt-2 mb-0 p-2 text-start">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
     @if (Model.TaxCalculated)
     {
         <h3 class="mt-4 mb-3">Vergi Hesaplama Sonucu</h3>
