@@ -373,13 +373,10 @@
             </div>
         </div>
 
-    @if (!ViewData.ModelState.IsValid)
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
-        <div class="alert alert-danger mt-2 mb-0 p-2 text-start">
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <div>@error.ErrorMessage</div>
-            }
+        <div class="alert alert-danger mt-3">
+            @Model.ErrorMessage
         </div>
     }
     @if (Model.TaxCalculated)
@@ -432,6 +429,7 @@
                                             : 0;
                                 }
                                 <ul class="mb-0 mt-2">
+                                    <li><strong>Anlık Fiyat ($):</strong> @s.CurrentPrice.ToString("N4")</li>
                                     <li><strong>Alış ÜFE Endeksi:</strong> @s.BuyUfeIndex.ToString("N2")</li>
                                     <li><strong>Satış ÜFE Endeksi:</strong> @s.SellUfeIndex.ToString("N2")</li>
                                     <li>

@@ -34,6 +34,8 @@ namespace MidasTaxCalculatorSite.Pages
         public bool HasUserEvdsKey => !string.IsNullOrWhiteSpace(UserEvdsKey);
         public bool HasUserAlphaKey => !string.IsNullOrWhiteSpace(UserAlphaKey);
         public bool HasUserYahooKey => !string.IsNullOrWhiteSpace(UserYahooKey);
+        public string? ErrorMessage { get; private set; }
+
         [BindProperty]
         public string? UserEvdsKey { get; set; }
         [BindProperty]
@@ -211,10 +213,12 @@ namespace MidasTaxCalculatorSite.Pages
                 }
                 catch (ApiAuthorizationException ex)
                 {
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                    TaxCalculated = false;
+                    ErrorMessage = ex.Message;
                 }
-
+                catch (Exception ex)
+                {
+                    ErrorMessage = "Beklenmeyen bir hata oluştu: " + ex.Message;
+                }
                 UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
                 return Page();
         }

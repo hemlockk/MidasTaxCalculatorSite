@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MidasTaxCalculatorSite")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9175423d347e1d813e81716ad78c0ba49cfd18d9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ccdcbdba78b112e9bd0339b6ec016b9014cc2db5")]
 [assembly: System.Reflection.AssemblyProductAttribute("MidasTaxCalculatorSite")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MidasTaxCalculatorSite")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
