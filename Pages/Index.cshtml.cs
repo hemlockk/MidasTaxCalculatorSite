@@ -101,7 +101,7 @@ namespace MidasTaxCalculatorSite.Pages
             var httpResponse = await client.GetAsync(url);
 
             if (!httpResponse.IsSuccessStatusCode)
-                throw new Exception($"FCS API error: {(int)httpResponse.StatusCode}");
+                throw new Exception($"FCS API error: {(int)httpResponse.StatusCode} \nGirdiğiniz hisse değerlerini kontrol ediniz.");
 
             var json = await httpResponse.Content.ReadAsStringAsync();
 
@@ -127,17 +127,18 @@ namespace MidasTaxCalculatorSite.Pages
         {
             LoadStocksFromSession();
             LoadUserKeysFromSession();
-            var newStock = new Stock
+            if(UserInput.BuyAmount > 0 && UserInput.BuyPrice > 0)
             {
-                StockCode = UserInput.StockCode.ToUpper(),
-                BuyDate = UserInput.BuyDate,
-                BuyAmount = UserInput.BuyAmount,
-                BuyPrice = UserInput.BuyPrice
-            };
-
-            CreatedStocks.Add(newStock);
+                var newStock = new Stock
+                {
+                    StockCode = UserInput.StockCode.ToUpper(),
+                    BuyDate = UserInput.BuyDate,
+                    BuyAmount = UserInput.BuyAmount,
+                    BuyPrice = UserInput.BuyPrice
+                };
+                CreatedStocks.Add(newStock);
+            }
             SaveStocksToSession();
-
             return Page();
         }
         private async Task<decimal> CalculateTaxAsync(List<Stock> stocks)
