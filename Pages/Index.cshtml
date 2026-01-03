@@ -63,13 +63,13 @@
                 color:#0f172a;
                 line-height:1.2;
             ">
-                Midas Vergi Hesaplama
+                ABD Borsası Vergi Hesaplama
             </div>
             <div style="
                 font-size:0.8rem;
                 color:#6b7280;
             ">
-                ABD Hisseleri · Vergi Aracı
+                ABD Hisseleri · Türk Vergi Mevzuatı
             </div>
             </div>
         </div>
@@ -477,16 +477,17 @@
 
     <div class="card mt-4 mb-4">
         <div class="card-header bg-info text-white">
-            API Anahtarlarınız (İsteğe Bağlı)
+            API Anahtarlarınız
         </div>
 
         <div class="card-body">
 
             <div class="alert alert-warning small" role="alert">
-                EVDS anahtarı ve <strong>AlphaVantage veya Yahoo Finance</strong> 
-                anahtarlarından en az birinin girilmesi gerekir. Bu alanlar boş 
+                EVDS ve FCS API anahtarlarının girilmesi gerekir. Bu alanlar boş 
                 bırakılırsa uygulama varsayılan anahtarları kullanır. Varsayılan 
-                anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir.
+                anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir. 
+                API anahtarlarınızınasıl elde edeceğinize dair aşağıdaki bölümleri inceleyebilirsiniz.Bu anahtarlar ücretsizdir sadece kullanım limitleri vardır.
+                EVDS saatlik 1000 istek limiti sunar. FCS ise Aylık 500 istek limiti sunar.
             </div>
 
             <form method="post" asp-page-handler="SaveKeys" novalidate data-val="false">
@@ -502,22 +503,11 @@
                         }
                     </div>
                     <div class="col-md-4 position-relative">
-                        <label class="form-label">AlphaVantage API Key</label>
-                        <input asp-for="UserAlphaKey"
+                        <label class="form-label">FCS API Key</label>
+                        <input asp-for="UserFCSKey"
                             class="form-control"
-                            placeholder="İsteğe bağlı">
-                        @if (Model.HasUserAlphaKey)
-                        {
-                            <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
-                        }
-                    </div>
-
-                    <div class="col-md-4 position-relative">
-                        <label class="form-label">Yahoo API Key</label>
-                        <input asp-for="UserYahooKey"
-                            class="form-control"
-                            placeholder="İsteğe bağlı">
-                        @if (Model.HasUserYahooKey)
+                            placeholder="Varsayılan anahtar kullanılacak">
+                        @if (Model.HasUserFCSKey)
                         {
                             <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
                         }
@@ -527,7 +517,99 @@
                     Anahtarları Kaydet
                 </button>
             </form>
+            <div class="accordion mt-3" id="apiHelpAccordion">
 
+            <!-- EVDS -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingEvds">
+                    <button class="accordion-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseEvds">
+                        EVDS API Anahtarı Nasıl Alınır?
+                    </button>
+                </h2>
+                <div id="collapseEvds"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#apiHelpAccordion">
+                    <div class="accordion-body small">
+
+                        <strong>EVDS Kayıt Olma ve API Abonesi Olma</strong>
+                        <ol class="mt-2">
+                            <li>
+                                TCMB EVDS sistemine aşağıdaki bağlantıdan gidin:
+                                <br />
+                                <a href="https://evds2.tcmb.gov.tr/index.php?/evds/login"
+                                target="_blank">
+                                    https://evds2.tcmb.gov.tr/index.php?/evds/login
+                                </a>
+                            </li>
+                            <li>
+                                “GİRİŞ YAP” butonu altında yer alan
+                                <strong>“KAYIT OL”</strong> seçeneği ile kayıt olun.
+                            </li>
+                            <li>
+                                Giriş yaptıktan sonra profil sayfanıza gidin:
+                                <br />
+                                <a href="https://evds2.tcmb.gov.tr/index.php?/evds/editProfile"
+                                target="_blank">
+                                    Profil Sayfası
+                                </a>
+                            </li>
+                            <li>
+                                Sayfanın alt kısmında yer alan
+                                <strong>“API ANAHTARI”</strong> butonuna basın.
+                            </li>
+                            <li>
+                                Oluşturulan API anahtarını kopyalayarak buraya yapıştırın.
+                            </li>
+                        </ol>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- FCS -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingFcs">
+                    <button class="accordion-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseFcs">
+                        FCS API Anahtarı Nasıl Alınır?
+                    </button>
+                </h2>
+                <div id="collapseFcs"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#apiHelpAccordion">
+                    <div class="accordion-body small">
+
+                        <strong>FCS API Key Oluşturma</strong>
+                        <ol class="mt-2">
+                            <li>
+                                FCS API sitesine gidin:
+                                <br />
+                                <a href="https://fcsapi.com/"
+                                target="_blank">
+                                    https://fcsapi.com
+                                </a>
+                            </li>
+                            <li>
+                                Ücretsiz hesap oluşturup giriş yapın.
+                            </li>
+                            <li>
+                                Dashboard → API Keys bölümüne gidin.
+                            </li>
+                            <li>
+                                API anahtarınızı kopyalayarak buraya yapıştırın.
+                            </li>
+                        </ol>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
         </div>
     </div>
 

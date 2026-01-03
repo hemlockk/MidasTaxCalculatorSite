@@ -32,16 +32,29 @@ namespace MidasTaxCalculatorSite.Pages
             UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) }; 
         }
         public bool HasUserEvdsKey => !string.IsNullOrWhiteSpace(UserEvdsKey);
-        public bool HasUserAlphaKey => !string.IsNullOrWhiteSpace(UserAlphaKey);
-        public bool HasUserYahooKey => !string.IsNullOrWhiteSpace(UserYahooKey);
+        public bool HasUserFCSKey => !string.IsNullOrWhiteSpace(UserFCSKey);
+        public class FcsLatestRoot
+        {
+            public bool status { get; set; }
+            public List<FcsStockItem> response { get; set; } = [];
+        }
+
+        public class FcsStockItem
+        {
+            public string ticker { get; set; }
+            public FcsActive active { get; set; }
+        }
+
+        public class FcsActive
+        {
+            public decimal? c { get; set; } // close / last price
+        }
         public string? ErrorMessage { get; private set; }
 
         [BindProperty]
         public string? UserEvdsKey { get; set; }
         [BindProperty]
-        public string? UserAlphaKey { get; set; }
-        [BindProperty]
-        public string? UserYahooKey { get; set; }
+        public string? UserFCSKey { get; set; }
         public decimal TotalTax { get; set; }
         public decimal TotalProfit { get; set; }
         public bool TaxCalculated { get; set; }
@@ -81,56 +94,37 @@ namespace MidasTaxCalculatorSite.Pages
             [JsonPropertyName("items")]
             public List<UfeItem> Items { get; set; }
         }
-        public async Task<Stock> GetCurrentPriceAsync(Stock stock)
+        public async Task<decimal> GetCurrentPriceAsync(string stockCode)
         {
-            // alphavantage API
-            var client = new HttpClient();
-            var url = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stock.StockCode + "&apikey=" + GetAlphaKey();
-            var json = await client.GetStringAsync(url);
+             var url =
+                $"https://api-v4.fcsapi.com/stock/latest" +
+                $"?symbol={stockCode}&access_key={GetFCSKey()}";
 
-            using var doc = JsonDocument.Parse(json);
+            using var client = new HttpClient();
+            var httpResponse = await client.GetAsync(url);
 
-            var root = doc.RootElement;
-            var priceString = root
-                .GetProperty("Global Quote")
-                .GetProperty("05. price")
-                .GetString();
+            if (!httpResponse.IsSuccessStatusCode)
+                throw new Exception($"FCS API error: {(int)httpResponse.StatusCode}");
 
-            stock.CurrentPrice = decimal.Parse(priceString);
-            if(stock.CurrentPrice != null && stock.CurrentPrice != 0)
-            {
-                return stock;
-            }
-            // Yahoo API in case other doesn't work
-            else if(stock.CurrentPrice == null || stock.CurrentPrice == 0)
-            {
-                string yahooKey = _config["ApiKeys:Yahoo"];
-                client = new HttpClient();
+            var json = await httpResponse.Content.ReadAsStringAsync();
 
-                    client.DefaultRequestHeaders.Add("x-rapidapi-key", GetYahooKey());
-                    client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
+            var data = JsonSerializer.Deserialize<FcsLatestRoot>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
 
-                url = $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes?region=US&symbols={stock.StockCode}";
+            if (data == null || !data.status)
+                throw new Exception("FCS API returned invalid response.");
 
-                json = await client.GetStringAsync(url);
+            // Priority: NYSE → NASDAQ
+            var preferred = data.response
+                .FirstOrDefault(x => x.ticker == $"NYSE:{stockCode}")
+                ?? data.response.FirstOrDefault(x => x.ticker == $"NASDAQ:{stockCode}");
 
-                using var doc2 = JsonDocument.Parse(json);
+            if (preferred?.active?.c == null)
+                throw new Exception("US stock price not found (NYSE/NASDAQ).");
 
-                var price = doc2.RootElement
-                    .GetProperty("quoteResponse")
-                    .GetProperty("result")[0]
-                    .GetProperty("regularMarketPrice")
-                    .GetDecimal();
-
-                stock.CurrentPrice = price;
-
-                return stock;
-            }
-            else
-            {
-                throw new Exception("Could not retrieve stock price from either API.");
-            }
-           
+            return preferred.active.c.Value;
         }
         public IActionResult OnPostAddStock()
         {
@@ -164,7 +158,7 @@ namespace MidasTaxCalculatorSite.Pages
             {
                 stock.BuyUfeIndex = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
                 stock.SellUfeIndex = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
-                stock.CurrentPrice = (await GetCurrentPriceAsync(stock)).CurrentPrice;
+                stock.CurrentPrice = await GetCurrentPriceAsync(stock.StockCode);
                 stock.BuyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
                 stock.SellRate = currentRate;
                 decimal inflationAdjustedBuyPrice = stock.BuyPrice;
@@ -366,14 +360,12 @@ namespace MidasTaxCalculatorSite.Pages
         public void SaveUserKeysToSession()
         {
             HttpContext.Session.SetString("UserEvdsKey", UserEvdsKey ?? "");
-            HttpContext.Session.SetString("UserAlphaKey", UserAlphaKey ?? "");
-            HttpContext.Session.SetString("UserYahooKey", UserYahooKey ?? "");
+            HttpContext.Session.SetString("UserFCSKey", UserFCSKey ?? "");
         }
         public void LoadUserKeysFromSession()
         {
             UserEvdsKey = HttpContext.Session.GetString("UserEvdsKey");
-            UserAlphaKey = HttpContext.Session.GetString("UserAlphaKey");
-            UserYahooKey = HttpContext.Session.GetString("UserYahooKey");
+            UserFCSKey = HttpContext.Session.GetString("UserFCSKey");
         }
         private string GetEvdsKey()
         {
@@ -381,17 +373,11 @@ namespace MidasTaxCalculatorSite.Pages
                 ? UserEvdsKey
                 : _config["ApiKeys:Evds"];
         }
-        private string GetAlphaKey()
+        private string GetFCSKey()
         {
-            return !string.IsNullOrWhiteSpace(UserAlphaKey)
-                ? UserAlphaKey
-                : _config["ApiKeys:AlphaVantage"];
-        }
-        private string GetYahooKey()
-        {
-            return !string.IsNullOrWhiteSpace(UserYahooKey)
-                ? UserYahooKey
-                : _config["ApiKeys:Yahoo"];
+            return !string.IsNullOrWhiteSpace(UserFCSKey)
+                ? UserFCSKey
+                : _config["ApiKeys:FCS"];
         }
         public IActionResult OnPostSaveKeys()
         {

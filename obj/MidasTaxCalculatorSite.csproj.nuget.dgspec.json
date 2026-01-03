@@ -49,6 +49,10 @@
               "target": "Package",
               "version": "[1.12.4, )"
             },
+            "Microsoft.Playwright": {
+              "target": "Package",
+              "version": "[1.57.0, )"
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.4, )"
