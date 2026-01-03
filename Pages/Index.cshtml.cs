@@ -19,10 +19,7 @@ namespace MidasTaxCalculatorSite.Pages
         public IndexModel(IConfiguration config)
         {
             _config = config;
-            UserInput = new Stock
-            {
-                BuyDate = DateTime.Today.AddDays(-1)
-            };
+            UserInput = new Stock{};
         }
         public void OnGet()
         {
@@ -200,6 +197,11 @@ namespace MidasTaxCalculatorSite.Pages
         }
         public async Task<IActionResult> OnPostCalculateTaxAsync()
         {
+            if (CreatedStocks.Count == 0)
+            {
+                ErrorMessage = "Eklenmiş hisse bulunmamaktadır.";
+                return Page();
+            }
                 try
                 {
                     TotalTax = await CalculateTaxAsync(CreatedStocks);
@@ -213,7 +215,6 @@ namespace MidasTaxCalculatorSite.Pages
                 {
                     ErrorMessage = "Beklenmeyen bir hata oluştu: " + ex.Message;
                 }
-                UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
                 return Page();
         }
         private async Task<decimal> GetUsdTryRateAsync(DateTime date)
@@ -307,7 +308,6 @@ namespace MidasTaxCalculatorSite.Pages
         {
             LoadUserKeysFromSession();
             HttpContext.Session.Remove("Stocks");
-            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
         private async Task<List<UfeItem>> GetUfeIndexValuesAsync()
@@ -348,7 +348,6 @@ namespace MidasTaxCalculatorSite.Pages
         {
             LoadStocksFromSession();
             LoadUserKeysFromSession();
-            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             if (index >= 0 && index < CreatedStocks.Count)
             {
                 CreatedStocks.RemoveAt(index);
@@ -384,7 +383,6 @@ namespace MidasTaxCalculatorSite.Pages
             SaveUserKeysToSession();
             LoadUserKeysFromSession();
             LoadStocksFromSession();
-            UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) };
             return Page();
         }
     }
