@@ -2,7 +2,6 @@
 @model MidasTaxCalculatorSite.Pages.IndexModel
 
 
-
 <script>
     $(function () {
         $("form[asp-page-handler='SaveKeys']").removeData("validator") 
@@ -23,6 +22,7 @@
             }
         }
 </script>
+<script src="~/js/site.js" asp-append-version="true"></script>
 <body style="
   min-height:100vh;
   background-image:url('/images/background.png');
@@ -74,17 +74,30 @@
             </div>
         </div>
 
-        <!-- RIGHT: Optional status / tag -->
+        <!-- RIGHT: Beta + Dark Mode -->
         <div style="
-            font-size:0.75rem;
-            padding:0.35rem 0.7rem;
-            border-radius:999px;
-            background:#eef2ff;
-            color:#4338ca;
-            font-weight:600;
+            display:flex;
+            align-items:center;
+            gap:0.6rem;
         ">
-            Beta
+
+            <div style="
+                font-size:0.75rem;
+                padding:0.35rem 0.7rem;
+                border-radius:999px;
+                background:#eef2ff;
+                color:#4338ca;
+                font-weight:600;
+            ">
+                Beta
+            </div>
+
+            <button id="darkModeToggle" type="button">
+                🌙
+            </button>
+
         </div>
+
 
         </div>
     </header>
@@ -144,7 +157,7 @@
         opacity:0;
         transition:max-height 0.35s ease, opacity 0.25s ease;
         ">
-            <div style="
+            <div class="example" style="
                 background:#f9fafb;
                 border:1px solid #e5e7eb;
                 border-radius:12px;
@@ -158,7 +171,7 @@
                 </ul>
             </div>
 
-            <div style="
+            <div class="example" style="
                 background:#f9fafb;
                 border:1px solid #e5e7eb;
                 border-radius:12px;
@@ -173,7 +186,7 @@
                 </ul>
             </div>
 
-            <div style="
+            <div class="example" style="
                 background:#f9fafb;
                 border:1px solid #e5e7eb;
                 border-radius:12px;

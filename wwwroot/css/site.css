@@ -20,3 +20,202 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* ===== FORCE DARK MODE OVERRIDES ===== */
+
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #e5e7eb;
+}
+
+/* Header / containers */
+body.dark-mode [style*="background:white"] {
+    background-color: #1e1e1e !important;
+}
+
+body.dark-mode [style*="color:#0f172a"] {
+    color: #e5e7eb !important;
+}
+
+/* Cards */
+body.dark-mode .card {
+    background-color: #1e1e1e !important;
+    border-color: #2c2c2c;
+}
+
+/* Bootstrap backgrounds */
+body.dark-mode .bg-white {
+    background-color: #1e1e1e !important;
+}
+
+body.dark-mode .table-light {
+    background-color: #1f1f1f !important;
+}
+
+body.dark-mode .alert-warning {
+    background-color: #2a2a2a;
+    color: #facc15;
+    border-color: #444;
+}
+
+/* Inputs */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #1c1c1c !important;
+    color: #e5e7eb !important;
+    border-color: #444;
+}
+
+/* Buttons */
+body.dark-mode .btn-info {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+/* Tables */
+body.dark-mode .table {
+    color: #e5e7eb;
+}
+
+/* Lists inside dark mode */
+body.dark-mode ol,
+body.dark-mode ul {
+    color: #e5e7eb !important;
+}
+
+body.dark-mode li {
+    color: #e5e7eb !important;
+}
+
+/* Accordion content */
+body.dark-mode .accordion-body {
+    color: #e5e7eb !important;
+    background-color: #1e1e1e !important;
+}
+
+/* Links (very important) */
+body.dark-mode a {
+    color: #93c5fd !important;
+}
+
+body.dark-mode a:hover {
+    color: #bfdbfe !important;
+}
+
+body.dark-mode a:visited {
+    color: #c4b5fd !important;
+}
+
+body.dark-mode .accordion-header {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .accordion-button {
+    background-color: #1e1e1e !important;
+    color: #e5e7eb !important;
+    border-color: #2c2c2c;
+}
+
+body.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+    box-shadow: none;
+}
+
+/* Arrow icon */
+body.dark-mode .accordion-button::after {
+    filter: invert(1);
+}
+
+/* Generic h2 (outside accordion) */
+body.dark-mode h2 {
+    color: #e5e7eb;
+}
+
+body.dark-mode .table thead.table-light {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+}
+
+/* Table header cells */
+body.dark-mode .table thead th {
+    background-color: #1f2937 !important;
+    color: #e5e7eb !important;
+    border-color: #374151;
+}
+
+/* Table footer (totals row) */
+body.dark-mode .table tfoot.table-secondary {
+    background-color: #111827 !important; /* dark slate */
+    color: #e5e7eb !important;
+}
+
+/* Footer cells */
+body.dark-mode .table tfoot td {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+    border-color: #374151;
+}
+
+/* Keep success / danger colors readable */
+body.dark-mode .text-success {
+    color: #4ade80 !important;
+}
+
+body.dark-mode .text-danger {
+    color: #f87171 !important;
+}
+
+/* Collapsed detail row */
+body.dark-mode tr.bg-light {
+    background-color: #111827 !important; /* dark slate */
+}
+
+/* Cells inside collapsed row */
+body.dark-mode tr.bg-light td {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+    border-color: #374151;
+}
+
+/* Inner content padding div */
+body.dark-mode tr.bg-light td > div {
+    background-color: transparent !important;
+    color: #e5e7eb;
+}
+
+/* List inside detail row */
+body.dark-mode tr.bg-light ul,
+body.dark-mode tr.bg-light li {
+    color: #e5e7eb !important;
+}
+
+/* Strong labels inside detail row */
+body.dark-mode tr.bg-light strong {
+    color: #f9fafb;
+}
+body.dark-mode .table tbody tr {
+    color: #e5e7eb !important;
+}
+body.dark-mode .table tbody td {
+    color: #e5e7eb !important;
+}
+body.dark-mode .example {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+#darkModeToggle {
+    border: none;
+    background: #f1f5f9;
+    border-radius: 999px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+#darkModeToggle:hover {
+    background: #e5e7eb;
+}
