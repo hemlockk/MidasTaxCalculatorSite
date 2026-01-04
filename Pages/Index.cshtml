@@ -420,9 +420,16 @@
             <tbody>
                 @for (int i = 0; i < Model.CreatedStocks.Count; i++)
                 {
+
                     var s = Model.CreatedStocks[i];
                     var detailId = $"details-{i}";
-
+                    @if (s.CurrentPrice == -1)
+                    {
+                    <tr>
+                        <td colspan="6" class="text-start">@s.StockCode hisse için anlık fiyat bulunamadı lütfen hisse kodunu kontrol ediniz.</td>
+                    </tr>
+                        continue;
+                    }
                     <tr>
                         <td>@s.StockCode</td>
                         <td>@s.BuyDate.ToString("dd.MM.yyyy")</td>
@@ -505,11 +512,11 @@
         <div class="card-body">
 
             <div class="alert alert-warning small" role="alert">
-                EVDS ve FCS API anahtarlarının girilmesi gerekir. Bu alanlar boş 
+                EVDS ve AlphaVantage API anahtarlarının girilmesi gerekir. Bu alanlar boş 
                 bırakılırsa uygulama varsayılan anahtarları kullanır. Varsayılan 
                 anahtarlar ücretsiz kullanım limitlerine ulaşmış olabilir. 
                 API anahtarlarınızınasıl elde edeceğinize dair aşağıdaki bölümleri inceleyebilirsiniz.Bu anahtarlar ücretsizdir sadece kullanım limitleri vardır.
-                 FCS ise Aylık 500 istek limiti sunar.
+                 AlphaVantage ise Günlük 25 istek limiti sunar.
             </div>
 
             <form method="post" asp-page-handler="SaveKeys" novalidate data-val="false">
@@ -525,11 +532,11 @@
                         }
                     </div>
                     <div class="col-md-4 position-relative">
-                        <label class="form-label">FCS API Key</label>
-                        <input asp-for="UserFCSKey"
+                        <label class="form-label">AlphaVantage API Key</label>
+                        <input asp-for="UserAlphaKey"
                             class="form-control"
                             placeholder="Varsayılan anahtar kullanılacak">
-                        @if (Model.HasUserFCSKey)
+                        @if (Model.HasUserAlphaKey)
                         {
                             <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
                         }
@@ -589,47 +596,43 @@
                                 EVDS saatlik 1000 istek limiti sunar.
                             </li>
                         </ol>
-
                     </div>
                 </div>
             </div>
 
-            <!-- FCS -->
+            <!-- AlphaVantage -->
             <div class="accordion-item">
-                <h2 class="accordion-header" id="headingFcs">
+                <h2 class="accordion-header" id="headingAlphaVantage">
                     <button class="accordion-button collapsed"
                             type="button"
                             data-bs-toggle="collapse"
-                            data-bs-target="#collapseFcs">
-                        FCS API Anahtarı Nasıl Alınır?
+                            data-bs-target="#collapseAlphaVantage">
+                        AlphaVantage API Anahtarı Nasıl Alınır?
                     </button>
                 </h2>
-                <div id="collapseFcs"
+                <div id="collapseAlphaVantage"
                     class="accordion-collapse collapse"
                     data-bs-parent="#apiHelpAccordion">
                     <div class="accordion-body small">
 
-                        <strong>FCS API Key Oluşturma</strong>
+                        <strong>AlphaVantage API Key Oluşturma</strong>
                         <ol class="mt-2">
                             <li>
-                                FCS API sitesine gidin:
+                                AlphaVantage API sitesine gidin:
                                 <br />
-                                <a href="https://fcsapi.com/"
+                                <a href="https://www.alphavantage.co/support/#api-key"
                                 target="_blank">
-                                    https://fcsapi.com
+                                    https://www.alphavantage.co/support/#api-key
                                 </a>
                             </li>
                             <li>
-                                Ücretsiz hesap oluşturup giriş yapın. Google hesabınızı kullanabilirsiniz.
+                                Claim your Free API Key sekmesinin hemen altında email adresinizi girin. Diğer kısımları da kendinize göre doldurabilirsiniz.
                             </li>
                             <li>
-                                https://fcsapi.com/dashboard kısmında API Access Key altında bulabilirsiniz ücretsiz API key'inizi.
+                                GET FREE API KEY butonuna tıkladıkran sonra API key'inizi hemen alta gösterecektir.
                             </li>
                             <li>
                                 API anahtarınızı kopyalayarak buraya yapıştırın.
-                            </li>
-                            <li>
-                                FCS ücretsiz sürümünde aylık 500 istek limiti sunar. İstekleriniz limitlerini yine dashboard sayfasından takip edebilirsiniz.
                             </li>
                         </ol>
 

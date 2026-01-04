@@ -29,23 +29,7 @@ namespace MidasTaxCalculatorSite.Pages
             UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) }; 
         }
         public bool HasUserEvdsKey => !string.IsNullOrWhiteSpace(UserEvdsKey);
-        public bool HasUserFCSKey => !string.IsNullOrWhiteSpace(UserFCSKey);
-        public class FcsLatestRoot
-        {
-            public bool status { get; set; }
-            public List<FcsStockItem> response { get; set; } = [];
-        }
-
-        public class FcsStockItem
-        {
-            public string ticker { get; set; }
-            public FcsActive active { get; set; }
-        }
-
-        public class FcsActive
-        {
-            public decimal? c { get; set; } // close / last price
-        }
+        public bool HasUserAlphaKey => !string.IsNullOrWhiteSpace(UserAlphaKey);
         public string? ErrorMessage { get; private set; }
         public string? WarningMessage { get; private set; }
         public class UfeResult
@@ -58,7 +42,7 @@ namespace MidasTaxCalculatorSite.Pages
         [BindProperty]
         public string? UserEvdsKey { get; set; }
         [BindProperty]
-        public string? UserFCSKey { get; set; }
+        public string? UserAlphaKey { get; set; }
         public decimal TotalTax { get; set; }
         public decimal TotalProfit { get; set; }
         public bool TaxCalculated { get; set; }
@@ -87,6 +71,17 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal SellRate { get; set; }
         }
         public bool HasResult { get; private set; }
+        public class AlphaVantageSplitResponse
+        {
+            public string symbol { get; set; }
+            public List<AlphaVantageSplit> splits { get; set; } = [];
+        }
+
+        public class AlphaVantageSplit
+        {
+            public DateTime effective_date { get; set; }
+            public decimal split_factor { get; set; }
+        }
         public class UfeItem
         {
             [JsonPropertyName("Tarih")]
@@ -101,36 +96,50 @@ namespace MidasTaxCalculatorSite.Pages
         }
         public async Task<decimal> GetCurrentPriceAsync(string stockCode)
         {
-             var url =
-                $"https://api-v4.fcsapi.com/stock/latest" +
-                $"?symbol={stockCode}&access_key={GetFCSKey()}";
+            var url =
+                $"https://www.alphavantage.co/query" +
+                $"?function=GLOBAL_QUOTE" +
+                $"&symbol={stockCode}" +
+                $"&apikey={GetAlphaKey()}";
 
             using var client = new HttpClient();
-            var httpResponse = await client.GetAsync(url);
+            using var response = await client.GetAsync(url);
 
-            if (!httpResponse.IsSuccessStatusCode)
-                throw new Exception($"FCS API error: {(int)httpResponse.StatusCode} \nGirdiğiniz hisse değerlerini kontrol ediniz.");
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "Hisse fiyatı alınırken bir hata oluştu.";
+                return -1m;
+            }
 
-            var json = await httpResponse.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
 
-            var data = JsonSerializer.Deserialize<FcsLatestRoot>(
-                json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
+            // Rate limit
+            if (root.TryGetProperty("Error Message", out _))
+            {
+                throw new ApiAuthorizationException(
+                        "AlphaVantage API anahtarı hatalı veya kullanım limiti aşılmış olabilir."
+                    );
+            }
+            // Invalid or missing symbol
+            if (!root.TryGetProperty("Global Quote", out var quote) ||
+                !quote.TryGetProperty("05. price", out var priceProp))
+            {
+                return -1m;
+            }
 
-            if (data == null || !data.status)
-                throw new Exception("FCS API returned invalid response.");
+            var priceString = priceProp.GetString();
 
-            // Priority: NYSE → NASDAQ
-            var preferred = data.response
-                .FirstOrDefault(x => x.ticker == $"NYSE:{stockCode}")
-                ?? data.response.FirstOrDefault(x => x.ticker == $"NASDAQ:{stockCode}");
+            if (string.IsNullOrWhiteSpace(priceString))
+            {
+                return -1m;
+            }
 
-            if (preferred?.active?.c == null)
-                throw new Exception("US stock price not found (NYSE/NASDAQ).");
-
-            return preferred.active.c.Value;
+            return decimal.Parse(priceString, CultureInfo.InvariantCulture);
         }
+
+
         public IActionResult OnPostAddStock()
         {
             LoadStocksFromSession();
@@ -180,7 +189,7 @@ namespace MidasTaxCalculatorSite.Pages
                 decimal profit = (stock.CurrentPrice * stock.SellRate - inflationAdjustedBuyPrice * stock.BuyRate) * stock.BuyAmount;
                 stock.Profit = profit > 0 ? profit : 0;
                 stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
-                income += profit;
+                income += stock.Profit;
             }
             TotalProfit = income; // Store total profit for display
             if (income <= 0) 
@@ -385,12 +394,12 @@ namespace MidasTaxCalculatorSite.Pages
         public void SaveUserKeysToSession()
         {
             HttpContext.Session.SetString("UserEvdsKey", UserEvdsKey ?? "");
-            HttpContext.Session.SetString("UserFCSKey", UserFCSKey ?? "");
+            HttpContext.Session.SetString("UserAlphaKey", UserAlphaKey ?? "");
         }
         public void LoadUserKeysFromSession()
         {
             UserEvdsKey = HttpContext.Session.GetString("UserEvdsKey");
-            UserFCSKey = HttpContext.Session.GetString("UserFCSKey");
+            UserAlphaKey = HttpContext.Session.GetString("UserAlphaKey");
         }
         private string GetEvdsKey()
         {
@@ -398,11 +407,11 @@ namespace MidasTaxCalculatorSite.Pages
                 ? UserEvdsKey
                 : _config["ApiKeys:Evds"];
         }
-        private string GetFCSKey()
+        private string GetAlphaKey()
         {
-            return !string.IsNullOrWhiteSpace(UserFCSKey)
-                ? UserFCSKey
-                : _config["ApiKeys:FCS"];
+            return !string.IsNullOrWhiteSpace(UserAlphaKey)
+                ? UserAlphaKey
+                : _config["ApiKeys:Alpha"];
         }
         public IActionResult OnPostSaveKeys()
         {
