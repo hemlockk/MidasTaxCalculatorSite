@@ -47,7 +47,14 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal? c { get; set; } // close / last price
         }
         public string? ErrorMessage { get; private set; }
-
+        public string? WarningMessage { get; private set; }
+        public class UfeResult
+        {
+            public decimal Value { get; set; }
+            public int Year { get; set; }
+            public int Month { get; set; }
+            public string Key => $"{Year}-{Month}";
+        }
         [BindProperty]
         public string? UserEvdsKey { get; set; }
         [BindProperty]
@@ -55,7 +62,6 @@ namespace MidasTaxCalculatorSite.Pages
         public decimal TotalTax { get; set; }
         public decimal TotalProfit { get; set; }
         public bool TaxCalculated { get; set; }
-        public DateTime FxDate { get; set; } = DateTime.Today;
         [BindProperty]
         public Stock UserInput { get; set; } = new();
         [BindProperty]
@@ -74,7 +80,9 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal Profit { get; set; }
             public decimal MinTaxRateApplied { get; set; }
             public decimal BuyUfeIndex { get; set; }
+            public string BuyUfeDate { get; set; }
             public decimal SellUfeIndex { get; set; }
+            public string SellUfeDate { get; set; }
             public decimal BuyRate { get; set; }
             public decimal SellRate { get; set; }
         }
@@ -154,8 +162,12 @@ namespace MidasTaxCalculatorSite.Pages
             decimal income = 0;
             foreach (var stock in stocks)
             {
-                stock.BuyUfeIndex = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
-                stock.SellUfeIndex = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
+                var buyUfe = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
+                stock.BuyUfeIndex = buyUfe.Value;
+                stock.BuyUfeDate = buyUfe.Key;
+                var sellUfe = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
+                stock.SellUfeIndex = sellUfe.Value;
+                stock.SellUfeDate = sellUfe.Key;
                 stock.CurrentPrice = await GetCurrentPriceAsync(stock.StockCode);
                 stock.BuyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
                 stock.SellRate = currentRate;
@@ -287,22 +299,35 @@ namespace MidasTaxCalculatorSite.Pages
 
             throw new Exception("TCMB: No USD/TRY rate found in the last 10 days.");
         }
-        private decimal GetUfeIndexForDate(
+        private UfeResult GetUfeIndexForDate(
             Dictionary<string, decimal> ufeDict,
             DateTime date)
         {
             string key = $"{date.Year}-{date.Month}";
 
-            if (ufeDict.TryGetValue(key, out var value))
-                return value;
-
-            // Fallback: previous month (important!)
-            var prev = date.AddMonths(-1);
-            string prevKey = $"{prev.Year}-{prev.Month}";
-
+                if (ufeDict.TryGetValue(key, out var value))
+                {
+                    return new UfeResult
+                    {
+                        Value = value,
+                        Year = date.Year,
+                        Month = date.Month
+                    };
+                }
+            
+            // Fallback: previous month (important!) 
+            var prev = date.AddMonths(-1); 
+            string prevKey = $"{prev.Year}-{prev.Month}"; 
             if (ufeDict.TryGetValue(prevKey, out var prevValue))
-                return prevValue;
-
+            {
+                WarningMessage = $"{key} Tarihi için ÜFE endeksi bulunamadı (Henüz açıklanmamış olabilir). {prevKey} endeksi kullanıldı.";
+                return new UfeResult
+                {
+                    Value = prevValue,
+                    Year = prev.Year,
+                    Month = prev.Month
+                };
+            }
             throw new Exception($"ÜFE değeri bulunamadı: {key}");
         }
         public IActionResult OnPostClear()

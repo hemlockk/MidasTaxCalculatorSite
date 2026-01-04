@@ -111,6 +111,9 @@
   ">
     <div style="margin-bottom:15px; font-size:15px; line-height:1.5;">
         <p>
+            Bu uygulamanın amacı henüz daha satmamış olduğunuz ABD borsası hisselerinizin size vergi sonrası gerçek getirisini görmenize yardımcı olmaktır.
+        </p>
+        <p>
             ABD borsalarından elde edilen alım satım kazançları, beyana tabi tutulmalıdır.
             Bu kazançlar Türk Lirası cinsinden hesaplanmalıdır. Dolar/TL dönüşümlerinde,
             işlem gününden bir önceki günün Türkiye Cumhuriyeti Merkez Bankası kapanış kuru temel alınmalıdır.
@@ -389,7 +392,13 @@
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
         <div class="alert alert-danger mt-3">
-            @Model.ErrorMessage
+           ❌ @Model.ErrorMessage
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.WarningMessage))
+    {
+        <div class="warning alert-warning mt-3">
+           ⚠️ @Model.WarningMessage
         </div>
     }
     @if (Model.TaxCalculated)
@@ -443,8 +452,8 @@
                                 }
                                 <ul class="mb-0 mt-2">
                                     <li><strong>Anlık Fiyat ($):</strong> @s.CurrentPrice.ToString("N4")</li>
-                                    <li><strong>Alış ÜFE Endeksi:</strong> @s.BuyUfeIndex.ToString("N2")</li>
-                                    <li><strong>Satış ÜFE Endeksi:</strong> @s.SellUfeIndex.ToString("N2")</li>
+                                    <li><strong>Alış (@s.BuyUfeDate) ÜFE Endeksi:</strong> @s.BuyUfeIndex.ToString("N2")</li>
+                                    <li><strong>Satış (@s.SellUfeDate) ÜFE Endeksi:</strong> @s.SellUfeIndex.ToString("N2")</li>
                                     <li>
                                         <strong>ÜFE Farkı:</strong>
                                         @inflationFactorPercent.ToString("N2") %
