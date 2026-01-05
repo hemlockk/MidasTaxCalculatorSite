@@ -71,17 +71,12 @@ namespace MidasTaxCalculatorSite.Pages
             public decimal SellRate { get; set; }
         }
         public bool HasResult { get; private set; }
-        public class AlphaVantageSplitResponse
+        public class StockSplit
         {
-            public string symbol { get; set; }
-            public List<AlphaVantageSplit> splits { get; set; } = [];
+            public DateTime EffectiveDate { get; set; }
+            public decimal SplitFactor { get; set; } // e.g. 10 for 10:1
         }
 
-        public class AlphaVantageSplit
-        {
-            public DateTime effective_date { get; set; }
-            public decimal split_factor { get; set; }
-        }
         public class UfeItem
         {
             [JsonPropertyName("Tarih")]
@@ -138,8 +133,49 @@ namespace MidasTaxCalculatorSite.Pages
 
             return decimal.Parse(priceString, CultureInfo.InvariantCulture);
         }
+        public async Task<List<StockSplit>> GetStockSplitsAsync(string stockCode)
+        {
+            var url =
+                $"https://www.alphavantage.co/query" +
+                $"?function=SPLITS" +
+                $"&symbol={stockCode}" +
+                $"&apikey={GetAlphaKey()}";
 
+            using var client = new HttpClient();
+            using var response = await client.GetAsync(url);
 
+            if (!response.IsSuccessStatusCode)
+                return new List<StockSplit>();
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // Rate limit or API error
+            if (root.TryGetProperty("Note", out _) ||
+                root.TryGetProperty("Error Message", out _))
+                return new List<StockSplit>();
+
+            if (!root.TryGetProperty("data", out var splitsElement))
+                return new List<StockSplit>();
+
+            var splits = new List<StockSplit>();
+
+            foreach (var s in splitsElement.EnumerateArray())
+            {
+                splits.Add(new StockSplit
+                {
+                    EffectiveDate = DateTime.Parse(s.GetProperty("effective_date").GetString()!),
+                    SplitFactor = decimal.Parse(
+                        s.GetProperty("split_factor").GetString()!,
+                        CultureInfo.InvariantCulture
+                    )
+                });
+            }
+
+            return splits;
+        }
         public IActionResult OnPostAddStock()
         {
             LoadStocksFromSession();
@@ -180,8 +216,22 @@ namespace MidasTaxCalculatorSite.Pages
                 stock.CurrentPrice = await GetCurrentPriceAsync(stock.StockCode);
                 stock.BuyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
                 stock.SellRate = currentRate;
-                decimal inflationAdjustedBuyPrice = stock.BuyPrice;
+                var splits = await GetStockSplitsAsync(stock.StockCode);                
+                if (splits != null && splits.Count > 0)
+                {
+                    decimal totalSplitFactor = 1m;
+                    foreach (var split in splits)
+                    {
+                        if (split.EffectiveDate >= stock.BuyDate)
+                        {
+                            totalSplitFactor *= split.SplitFactor;
+                        }
+                    }
+                    stock.BuyAmount *= totalSplitFactor;
+                    stock.BuyPrice /= totalSplitFactor;
+                }
 
+                decimal inflationAdjustedBuyPrice = stock.BuyPrice;
                 if (stock.SellUfeIndex / stock.BuyUfeIndex > 1.1m) // Inflation adjustment applies only if there is more than 10% increase
                 {
                     inflationAdjustedBuyPrice *= stock.SellUfeIndex / stock.BuyUfeIndex;
