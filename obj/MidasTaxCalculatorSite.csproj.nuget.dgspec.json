@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {}
+    "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {}
   },
   "projects": {
-    "c:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {
+    "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+        "projectUniqueName": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
         "projectName": "MidasTaxCalculatorSite",
-        "projectPath": "c:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+        "projectPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
         "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\obj\\",
+        "outputPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
