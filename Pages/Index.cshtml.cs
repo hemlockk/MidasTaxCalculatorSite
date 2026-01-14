@@ -29,7 +29,7 @@ namespace MidasTaxCalculatorSite.Pages
             UserInput = new Stock { BuyDate = DateTime.Today.AddDays(-1) }; 
         }
         public bool HasUserEvdsKey => !string.IsNullOrWhiteSpace(UserEvdsKey);
-        public bool HasUserAlphaKey => !string.IsNullOrWhiteSpace(UserAlphaKey);
+        public bool HasUserYahooKey => !string.IsNullOrWhiteSpace(UserYahooKey);
         public string? ErrorMessage { get; private set; }
         public string? WarningMessage { get; private set; }
         public class UfeResult
@@ -42,7 +42,7 @@ namespace MidasTaxCalculatorSite.Pages
         [BindProperty]
         public string? UserEvdsKey { get; set; }
         [BindProperty]
-        public string? UserAlphaKey { get; set; }
+        public string? UserYahooKey { get; set; }
         public decimal TotalTax { get; set; }
         public decimal TotalProfit { get; set; }
         public bool TaxCalculated { get; set; }
@@ -69,6 +69,7 @@ namespace MidasTaxCalculatorSite.Pages
             public string SellUfeDate { get; set; }
             public decimal BuyRate { get; set; }
             public decimal SellRate { get; set; }
+            public List<StockSplit> Splits { get; set; } = new();
         }
         public bool HasResult { get; private set; }
         public class StockSplit
@@ -89,93 +90,131 @@ namespace MidasTaxCalculatorSite.Pages
             [JsonPropertyName("items")]
             public List<UfeItem> Items { get; set; }
         }
-        public async Task<decimal> GetCurrentPriceAsync(string stockCode)
+        public async Task GetCurrentPricesAsync(List<Stock> stocks)
         {
+            if (stocks == null || stocks.Count == 0)
+                return;
+
+            // Default everything to -1
+            foreach (var stock in stocks)
+            {
+                stock.CurrentPrice = -1;
+            }
+
+            var symbols = string.Join(",", stocks.Select(s => s.StockCode));
+
             var url =
-                $"https://www.alphavantage.co/query" +
-                $"?function=GLOBAL_QUOTE" +
-                $"&symbol={stockCode}" +
-                $"&apikey={GetAlphaKey()}";
+                $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes" +
+                $"?region=US&symbols={symbols}";
 
             using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
+            client.DefaultRequestHeaders.Add("x-rapidapi-key", GetYahooApiKey());
+
             using var response = await client.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
-            {
-                ErrorMessage = "Hisse fiyatı alınırken bir hata oluştu.";
-                return -1m;
-            }
+                return;
 
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
 
-            // Rate limit
-            if (root.TryGetProperty("Error Message", out _))
+            if (!doc.RootElement.TryGetProperty("quoteResponse", out var quoteResponse))
+                return;
+
+            if (!quoteResponse.TryGetProperty("result", out var resultElement))
+                return;
+
+            if (resultElement.ValueKind == JsonValueKind.Null ||
+                resultElement.ValueKind == JsonValueKind.Undefined)
             {
-                throw new ApiAuthorizationException(
-                        "AlphaVantage API anahtarı hatalı veya kullanım limiti aşılmış olabilir."
-                    );
-            }
-            // Invalid or missing symbol
-            if (!root.TryGetProperty("Global Quote", out var quote) ||
-                !quote.TryGetProperty("05. price", out var priceProp))
-            {
-                return -1m;
+                // All symbols invalid → keep -1
+                return;
             }
 
-            var priceString = priceProp.GetString();
+            if (resultElement.ValueKind != JsonValueKind.Array)
+                return;
 
-            if (string.IsNullOrWhiteSpace(priceString))
+            var lookup = stocks.ToDictionary(
+                s => s.StockCode,
+                s => s,
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            foreach (var item in resultElement.EnumerateArray())
             {
-                return -1m;
-            }
+                if (!item.TryGetProperty("symbol", out var symbolProp))
+                    continue;
 
-            return decimal.Parse(priceString, CultureInfo.InvariantCulture);
+                var symbol = symbolProp.GetString();
+                if (symbol == null || !lookup.TryGetValue(symbol, out var stock))
+                    continue;
+
+                if (item.TryGetProperty("regularMarketPrice", out var priceProp))
+                {
+                    stock.CurrentPrice = priceProp.GetDecimal();
+                }
+            }
         }
         public async Task<List<StockSplit>> GetStockSplitsAsync(string stockCode)
         {
             var url =
-                $"https://www.alphavantage.co/query" +
-                $"?function=SPLITS" +
-                $"&symbol={stockCode}" +
-                $"&apikey={GetAlphaKey()}";
+                $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-chart" +
+                $"?region=US&symbol={stockCode}&interval=1d&range=max&events=split";
 
             using var client = new HttpClient();
-            using var response = await client.GetAsync(url);
+            client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
+            client.DefaultRequestHeaders.Add("x-rapidapi-key", GetYahooApiKey());
 
+            using var response = await client.GetAsync(url);
             if (!response.IsSuccessStatusCode)
                 return new List<StockSplit>();
 
             var json = await response.Content.ReadAsStringAsync();
-
             using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
 
-            // Rate limit or API error
-            if (root.TryGetProperty("Note", out _) ||
-                root.TryGetProperty("Error Message", out _))
+            if (!doc.RootElement.TryGetProperty("chart", out var chart) ||
+                chart.ValueKind != JsonValueKind.Object)
                 return new List<StockSplit>();
 
-            if (!root.TryGetProperty("data", out var splitsElement))
+            if (!chart.TryGetProperty("result", out var resultArray) ||
+                resultArray.ValueKind != JsonValueKind.Array ||
+                resultArray.GetArrayLength() == 0)
+                return new List<StockSplit>();
+
+            var result = resultArray[0];
+
+            if (!result.TryGetProperty("events", out var events) ||
+                events.ValueKind != JsonValueKind.Object)
+                return new List<StockSplit>();
+
+            if (!events.TryGetProperty("splits", out var splitsElement) ||
+                splitsElement.ValueKind != JsonValueKind.Object)
                 return new List<StockSplit>();
 
             var splits = new List<StockSplit>();
 
-            foreach (var s in splitsElement.EnumerateArray())
+            foreach (var splitProp in splitsElement.EnumerateObject())
             {
+                var split = splitProp.Value;
+
                 splits.Add(new StockSplit
                 {
-                    EffectiveDate = DateTime.Parse(s.GetProperty("effective_date").GetString()!),
-                    SplitFactor = decimal.Parse(
-                        s.GetProperty("split_factor").GetString()!,
-                        CultureInfo.InvariantCulture
-                    )
+                    EffectiveDate = DateTimeOffset
+                        .FromUnixTimeSeconds(split.GetProperty("date").GetInt64())
+                        .UtcDateTime,
+
+                    SplitFactor =
+                        split.GetProperty("numerator").GetDecimal() /
+                        split.GetProperty("denominator").GetDecimal()
                 });
             }
 
-            return splits;
+            return splits
+                .OrderBy(s => s.EffectiveDate)
+                .ToList();
         }
+
         public IActionResult OnPostAddStock()
         {
             LoadStocksFromSession();
@@ -205,6 +244,7 @@ namespace MidasTaxCalculatorSite.Pages
                 x => decimal.Parse(x.UFEValue, CultureInfo.InvariantCulture)
             );
             decimal income = 0;
+            GetCurrentPricesAsync(stocks);
             foreach (var stock in stocks)
             {
                 var buyUfe = GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1));
@@ -213,30 +253,30 @@ namespace MidasTaxCalculatorSite.Pages
                 var sellUfe = GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1));
                 stock.SellUfeIndex = sellUfe.Value;
                 stock.SellUfeDate = sellUfe.Key;
-                stock.CurrentPrice = await GetCurrentPriceAsync(stock.StockCode);
                 stock.BuyRate = await GetUsdTryRateAsync(stock.BuyDate.AddDays(-1));
                 stock.SellRate = currentRate;
-                var splits = await GetStockSplitsAsync(stock.StockCode);                
+                var splits = await GetStockSplitsAsync(stock.StockCode); 
+                decimal totalSplitFactor = 1m;               
                 if (splits != null && splits.Count > 0)
                 {
-                    decimal totalSplitFactor = 1m;
+                    
                     foreach (var split in splits)
                     {
                         if (split.EffectiveDate >= stock.BuyDate)
                         {
                             totalSplitFactor *= split.SplitFactor;
+                            stock.Splits.Add(split);
                         }
                     }
-                    stock.BuyAmount *= totalSplitFactor;
-                    stock.BuyPrice /= totalSplitFactor;
+                
                 }
-
-                decimal inflationAdjustedBuyPrice = stock.BuyPrice;
+                decimal SplitFactorAdjustedAmount = stock.BuyAmount * totalSplitFactor;
+                decimal inflationAndSplitAdjustedBuyPrice = stock.BuyPrice / totalSplitFactor;
                 if (stock.SellUfeIndex / stock.BuyUfeIndex > 1.1m) // Inflation adjustment applies only if there is more than 10% increase
                 {
-                    inflationAdjustedBuyPrice *= stock.SellUfeIndex / stock.BuyUfeIndex;
+                    inflationAndSplitAdjustedBuyPrice *= stock.SellUfeIndex / stock.BuyUfeIndex;
                 }
-                decimal profit = (stock.CurrentPrice * stock.SellRate - inflationAdjustedBuyPrice * stock.BuyRate) * stock.BuyAmount;
+                decimal profit = (stock.CurrentPrice * stock.SellRate - inflationAndSplitAdjustedBuyPrice * stock.BuyRate) * SplitFactorAdjustedAmount;
                 stock.Profit = profit > 0 ? profit : 0;
                 stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
                 income += stock.Profit;
@@ -444,12 +484,12 @@ namespace MidasTaxCalculatorSite.Pages
         public void SaveUserKeysToSession()
         {
             HttpContext.Session.SetString("UserEvdsKey", UserEvdsKey ?? "");
-            HttpContext.Session.SetString("UserAlphaKey", UserAlphaKey ?? "");
+            HttpContext.Session.SetString("UserYahooKey", UserYahooKey ?? "");
         }
         public void LoadUserKeysFromSession()
         {
             UserEvdsKey = HttpContext.Session.GetString("UserEvdsKey");
-            UserAlphaKey = HttpContext.Session.GetString("UserAlphaKey");
+            UserYahooKey = HttpContext.Session.GetString("UserYahooKey");
         }
         private string GetEvdsKey()
         {
@@ -457,11 +497,11 @@ namespace MidasTaxCalculatorSite.Pages
                 ? UserEvdsKey
                 : _config["ApiKeys:Evds"];
         }
-        private string GetAlphaKey()
+        private string GetYahooApiKey()
         {
-            return !string.IsNullOrWhiteSpace(UserAlphaKey)
-                ? UserAlphaKey
-                : _config["ApiKeys:Alpha"];
+            return !string.IsNullOrWhiteSpace(UserYahooKey)
+                ? UserYahooKey
+                : _config["ApiKeys:Yahoo"];
         }
         public IActionResult OnPostSaveKeys()
         {

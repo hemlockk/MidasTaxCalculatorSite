@@ -512,7 +512,7 @@
         <div class="card-body">
 
             <div class="alert alert-warning small" role="alert">
-                EVDS ve AlphaVantage API anahtarlarının girilmesi gerekir.
+                EVDS ve Yahoo API anahtarlarının girilmesi gerekir.
                 API anahtarlarınızınasıl elde edeceğinize dair aşağıdaki bölümleri inceleyebilirsiniz.Bu anahtarlar ücretsizdir sadece kullanım limitleri vardır.
             </div>
 
@@ -529,11 +529,11 @@
                         }
                     </div>
                     <div class="col-md-4 position-relative">
-                        <label class="form-label">AlphaVantage API Key</label>
-                        <input asp-for="UserAlphaKey"
+                        <label class="form-label">Yahoo API Key</label>
+                        <input asp-for="UserYahooKey"
                             class="form-control"
                             placeholder="Varsayılan anahtar kullanılacak">
-                        @if (Model.HasUserAlphaKey)
+                        @if (Model.HasUserYahooKey)
                         {
                             <span class="text-success position-absolute top-50 end-0 translate-middle-y me-2">✔</span>
                         }
@@ -594,25 +594,25 @@
                 </div>
             </div>
 
-            <!-- AlphaVantage -->
+            <!-- Yahoo -->
             <div class="accordion-item">
-                <h2 class="accordion-header" id="headingAlphaVantage">
+                <h2 class="accordion-header" id="headingYahooVantage">
                     <button class="accordion-button collapsed"
                             type="button"
                             data-bs-toggle="collapse"
-                            data-bs-target="#collapseAlphaVantage">
-                        AlphaVantage API Anahtarı Nasıl Alınır?
+                            data-bs-target="#collapseYahooVantage">
+                        Yahoo API Anahtarı Nasıl Alınır?
                     </button>
                 </h2>
-                <div id="collapseAlphaVantage"
+                <div id="collapseYahooVantage"
                     class="accordion-collapse collapse"
                     data-bs-parent="#apiHelpAccordion">
                     <div class="accordion-body small">
 
-                        <strong>AlphaVantage API Key Oluşturma</strong>
+                        <strong>Yahoo API Key Oluşturma</strong>
                         <ol class="mt-2">
                             <li>
-                                AlphaVantage API sitesine gidin:
+                                Yahoo API sitesine gidin:
                                 <br />
                                 <a href="https://www.alphavantage.co/support/#api-key"
                                 target="_blank">
