@@ -246,19 +246,19 @@ namespace MidasTaxCalculatorSite.Pages
             {
                 return 0;
             }
-            else if (income <= 110000)
+            else if (income <= 190000)
             {
                 return income * 0.15m;
             }
-            else if (income <= 230000)
+            else if (income <= 400000)
             {
                 return 16500m + (income - 110000m) * 0.20m;
             }
-            else if (income <= 580000)
+            else if (income <= 1500000)
             {
                 return 40500m + (income - 230000m) * 0.27m;
             }
-            else if (income <= 3000000)
+            else if (income <= 5300000)
             {
                 return 135000m + (income - 580000m) * 0.35m;
             }
