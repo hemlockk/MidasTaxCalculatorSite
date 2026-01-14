@@ -285,7 +285,7 @@
                     class="form-control"
                     maxlength="5"
                     required
-                    pattern="[A-Za-z]{1,5}" />
+                    pattern="[A-Za-z\.]{1,5}" />
             </div>
 
             <div class="col-md-3">
@@ -468,6 +468,24 @@
                                     <li><strong>Alış Kur (USD/TRY):</strong> @s.BuyRate.ToString("N4")</li>
                                     <li><strong>Satış Kur (USD/TRY):</strong> @s.SellRate.ToString("N4")</li>
                                 </ul>
+                                @if (s.Splits != null && s.Splits.Count > 0)
+                                {
+                                    <div class="alert alert-info mt-3">
+                                        <strong>Aldığınız hisse aşağıdaki tarihlerde bölünmüştür:</strong>
+
+                                        <ul class="mt-2 mb-0">
+                                            @foreach (var split in s.Splits
+                                                .OrderBy(s => s.EffectiveDate))
+                                            {
+                                                <li>
+                                                    @split.EffectiveDate.ToString("dd.MM.yyyy")
+                                                    |
+                                                    @($"{split.SplitFactor}:1")
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
                             </div>
                         </td>
                     </tr>

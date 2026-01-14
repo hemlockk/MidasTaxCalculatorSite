@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\w199846\\OneDrive - Worldline SA\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {}
+    "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {}
   },
   "projects": {
-    "C:\\Users\\w199846\\OneDrive - Worldline SA\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {
+    "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\w199846\\OneDrive - Worldline SA\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+        "projectUniqueName": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
         "projectName": "MidasTaxCalculatorSite",
-        "projectPath": "C:\\Users\\w199846\\OneDrive - Worldline SA\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
-        "packagesPath": "C:\\Users\\w199846\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\w199846\\OneDrive - Worldline SA\\Documents\\MidasTaxCalculatorSite\\obj\\",
+        "projectPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\MidasTaxCalculatorSite.csproj",
+        "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\PC\\Documents\\MidasTaxCalculatorSite\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\w199846\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -43,8 +39,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -74,7 +69,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
