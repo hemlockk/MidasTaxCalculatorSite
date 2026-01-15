@@ -8,9 +8,11 @@ namespace MidasTaxCalculatorSite.Services;
 
 public class EVDSService
 {
+    private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
-    public EVDSService(IMemoryCache cache)
+    public EVDSService(HttpClient httpClient,IMemoryCache cache)
     {
+        _httpClient = httpClient;
         _cache = cache;
     }
     public async Task<decimal> GetUsdTryRateAsync(DateTime date, string evdsKey)
@@ -35,10 +37,10 @@ public class EVDSService
                 $"https://evds2.tcmb.gov.tr/service/evds/series=TP.DK.USD.S.YTL" +
                 $"&startDate={dateString}&endDate={dateString}&type=json";
 
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("key", evdsKey);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("key", evdsKey);
 
-            using var response = await client.GetAsync(url);
+            using var response = await _httpClient.SendAsync(request);
 
             if (response.StatusCode == HttpStatusCode.Forbidden)
             {
@@ -143,10 +145,13 @@ public class EVDSService
             $"&endDate={endDate:dd-MM-yyyy}" +
             $"&type=json";
 
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("key", evdsKey);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("key", evdsKey);
 
-        var json = await client.GetStringAsync(url);
+        using var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
 
         var result = JsonSerializer.Deserialize<UfeResponse>(
             json,

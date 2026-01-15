@@ -67,31 +67,82 @@ namespace MidasTaxCalculatorSite.Pages
         }
         private async Task<decimal> CalculateTaxAsync(List<Stock> stocks)
         {
-            decimal currentRate = await _evdsService.GetUsdTryRateAsync(DateTime.Today.AddDays(-1), GetEvdsKey());
-            List<UfeItem> Items = await _evdsService.GetUfeIndexValuesAsync(GetEvdsKey());
+            var usdTryTask = _evdsService.GetUsdTryRateAsync(
+                DateTime.Today.AddDays(-1),
+                GetEvdsKey()
+            );
+
+            var ufeTask = _evdsService.GetUfeIndexValuesAsync(
+                GetEvdsKey()
+            );
+
+            var pricesTask = _stockService.GetCurrentPricesAsync(
+                stocks,
+                GetYahooApiKey()
+            );
+
+            await Task.WhenAll(usdTryTask, ufeTask, pricesTask);
+
+            decimal currentRate = usdTryTask.Result;
+            List<UfeItem> Items = ufeTask.Result;
+
             var ufeDict = Items
             .Where(x => !string.IsNullOrEmpty(x.UFEValue))
             .ToDictionary(
                 x => x.UFEdate,
                 x => decimal.Parse(x.UFEValue, CultureInfo.InvariantCulture)
             );
-            decimal income = 0;
-            _stockService.GetCurrentPricesAsync(stocks, GetYahooApiKey()).Wait();
-            foreach (var stock in stocks)
+
+
+            
+            var stockTasks = stocks.Select(async stock =>
             {
-                var buyUfe = _evdsService.GetUfeIndexForDate(ufeDict, stock.BuyDate.AddMonths(-1), WarningMessage);
+                if (stock.CurrentPrice == -1)
+                {
+                    stock.Splits.Clear();
+                    stock.Profit = 0;
+                    stock.MinTaxRateApplied = 0;
+                    return 0m; // profit contribution
+                }
+
+                // --- UFE (sync, dictionary lookup)
+                var buyUfe = _evdsService.GetUfeIndexForDate(
+                    ufeDict,
+                    stock.BuyDate.AddMonths(-1),
+                    WarningMessage
+                );
+
                 stock.BuyUfeIndex = buyUfe.Value;
                 stock.BuyUfeDate = buyUfe.Key;
-                var sellUfe = _evdsService.GetUfeIndexForDate(ufeDict, DateTime.Today.AddMonths(-1), WarningMessage);
+
+                var sellUfe = _evdsService.GetUfeIndexForDate(
+                    ufeDict,
+                    DateTime.Today.AddMonths(-1),
+                    WarningMessage
+                );
+
                 stock.SellUfeIndex = sellUfe.Value;
                 stock.SellUfeDate = sellUfe.Key;
-                stock.BuyRate = await _evdsService.GetUsdTryRateAsync(stock.BuyDate.AddDays(-1), GetEvdsKey());
+
+                // --- EVDS (async, cached)
+                stock.BuyRate = await _evdsService.GetUsdTryRateAsync(
+                    stock.BuyDate.AddDays(-1),
+                    GetEvdsKey()
+                );
+
                 stock.SellRate = currentRate;
-                var splits = await _stockService.GetStockSplitsAsync(stock.StockCode, GetYahooApiKey());
-                decimal totalSplitFactor = 1m;               
+
+                // --- Splits (async, cached)
+                var splits = await _stockService.GetStockSplitsAsync(
+                    stock.StockCode,
+                    GetYahooApiKey()
+                );
+
+                stock.Splits.Clear();
+                decimal totalSplitFactor = 1m;
+
                 if (splits != null && splits.Count > 0)
                 {
-                    
                     foreach (var split in splits)
                     {
                         if (split.EffectiveDate >= stock.BuyDate)
@@ -100,20 +151,30 @@ namespace MidasTaxCalculatorSite.Pages
                             stock.Splits.Add(split);
                         }
                     }
-                
                 }
-                decimal SplitFactorAdjustedAmount = stock.BuyAmount * totalSplitFactor;
-                decimal inflationAndSplitAdjustedBuyPrice = stock.BuyPrice / totalSplitFactor;
-                if (stock.SellUfeIndex / stock.BuyUfeIndex > 1.1m) // Inflation adjustment applies only if there is more than 10% increase
+
+                // --- Calculations (pure CPU)
+                decimal splitAdjustedAmount = stock.BuyAmount * totalSplitFactor;
+                decimal adjustedBuyPrice = stock.BuyPrice / totalSplitFactor;
+
+                if (stock.SellUfeIndex / stock.BuyUfeIndex > 1.1m)
                 {
-                    inflationAndSplitAdjustedBuyPrice *= stock.SellUfeIndex / stock.BuyUfeIndex;
+                    adjustedBuyPrice *= stock.SellUfeIndex / stock.BuyUfeIndex;
                 }
-                decimal profit = (stock.CurrentPrice * stock.SellRate - inflationAndSplitAdjustedBuyPrice * stock.BuyRate) * SplitFactorAdjustedAmount;
+
+                decimal profit =
+                    (stock.CurrentPrice * stock.SellRate -
+                    adjustedBuyPrice * stock.BuyRate)
+                    * splitAdjustedAmount;
+
                 stock.Profit = profit > 0 ? profit : 0;
                 stock.MinTaxRateApplied = Math.Round(stock.Profit * 0.15m, 2);
-                income += stock.Profit;
-            }
-            TotalProfit = income; // Store total profit for display
+
+                return stock.Profit; // 👈 return contribution
+            });
+            decimal[] profits = await Task.WhenAll(stockTasks);
+            decimal income = profits.Sum();
+            TotalProfit = income;
             if (income <= 0) 
             {
                 return 0;

@@ -6,9 +6,11 @@ namespace MidasTaxCalculatorSite.Services;
 public class StockService
 {
     private readonly IMemoryCache _cache;
-    public StockService(IMemoryCache cache)
+    private readonly HttpClient _httpClient;
+    public StockService(HttpClient httpClient, IMemoryCache cache)
     {
         _cache = cache;
+        _httpClient = httpClient;
     }
     public async Task GetCurrentPricesAsync(List<Stock> stocks, string yahooApiKey)
     {
@@ -45,11 +47,11 @@ public class StockService
             $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-quotes" +
             $"?region=US&symbols={symbols}";
 
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
-        client.DefaultRequestHeaders.Add("x-rapidapi-key", yahooApiKey);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
+        request.Headers.Add("x-rapidapi-key", yahooApiKey);
 
-        using var response = await client.GetAsync(url);
+        using var response = await _httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
             throw new Exception($"Yahoo API hatası: {(int)response.StatusCode}");
 
@@ -98,11 +100,11 @@ public class StockService
             $"https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-chart" +
             $"?region=US&symbol={stockCode}&interval=1d&range=max&events=split";
 
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
-        client.DefaultRequestHeaders.Add("x-rapidapi-key", yahooApiKey);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com");
+        request.Headers.Add("x-rapidapi-key", yahooApiKey);
 
-        using var response = await client.GetAsync(url);
+        using var response = await _httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
             _cache.Set(cacheKey, new List<StockSplit>());
