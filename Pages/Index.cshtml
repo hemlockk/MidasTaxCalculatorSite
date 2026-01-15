@@ -370,22 +370,35 @@
                 </table>
             </div>
 
-            <div class="card-footer d-flex gap-3">
-                <form method="post" asp-page-handler="CalculateTax" class="me-2">
-                    <button type="submit" class="btn btn-success btn-sm">Vergiyi Hesapla</button>
-                    @for (int i = 0; i < Model.CreatedStocks.Count; i++) 
-                    { 
-                        <input type="hidden" asp-for="CreatedStocks[i].StockCode" /> 
-                        <input type="hidden" asp-for="CreatedStocks[i].BuyDate" /> 
-                        <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" /> 
-                        <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" /> 
-                        <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" /> 
-                    }
-                </form>
+            <div class="card-footer d-flex flex-column gap-3">
+                <div class="d-flex gap-3">
+                    <form method="post" asp-page-handler="CalculateTax" class="me-2">
+                        <button id="calculateBtn" type="submit" class="btn btn-success btn-sm">
+                            Vergiyi Hesapla
+                        </button>
 
-                <form method="post" asp-page-handler="Clear">
-                    <button type="submit" class="btn btn-danger btn-sm">Tümünü Temizle</button>
-                </form>
+                        @for (int i = 0; i < Model.CreatedStocks.Count; i++)
+                        {
+                            <input type="hidden" asp-for="CreatedStocks[i].StockCode" />
+                            <input type="hidden" asp-for="CreatedStocks[i].BuyDate" />
+                            <input type="hidden" asp-for="CreatedStocks[i].BuyAmount" />
+                            <input type="hidden" asp-for="CreatedStocks[i].BuyPrice" />
+                            <input type="hidden" asp-for="CreatedStocks[i].CurrentPrice" />
+                        }
+                    </form>
+
+                    <form method="post" asp-page-handler="Clear">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Tümünü Temizle
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 🔄 Spinner goes HERE -->
+                <div id="loadingSpinner" class="d-none align-items-center">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2">Hesaplama yapılıyor...</span>
+                </div>
             </div>
         </div>
 
@@ -671,3 +684,39 @@
 </script>
 </div>
 </body>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("calculateBtn");
+
+    if (!btn) return;
+
+    const form = btn.closest("form");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function () {
+        btn.disabled = true;
+        btn.innerText = "Hesaplanıyor...";
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("calculateBtn");
+    const spinner = document.getElementById("loadingSpinner");
+
+    if (!btn || !spinner) return;
+
+    const form = btn.closest("form");
+    if (!form) return;
+
+    form.addEventListener("submit", function () {
+        btn.disabled = true;
+        btn.innerText = "Hesaplanıyor...";
+        spinner.classList.remove("d-none");
+    });
+});
+</script>
+
+}
