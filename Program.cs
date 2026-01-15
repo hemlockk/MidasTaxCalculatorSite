@@ -1,8 +1,14 @@
+using MidasTaxCalculatorSite.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddSession();
+
+builder.Services.AddScoped<EVDSService>();
+builder.Services.AddScoped<StockService>();
+builder.Services.AddScoped<SessionService>();
+
 
 var app = builder.Build();
 
@@ -16,13 +22,13 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-app.UseSession();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 
 app.UseRouting();
 
 app.UseAuthorization();
 
 app.MapRazorPages();
-
+app.UseSession();
 app.Run();
