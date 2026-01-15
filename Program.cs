@@ -24,7 +24,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
-
+builder.Services.AddMemoryCache();
 app.UseRouting();
 
 app.UseAuthorization();
