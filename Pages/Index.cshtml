@@ -388,7 +388,7 @@
                     </form>
 
                     <form method="post" asp-page-handler="Clear">
-                        <button type="submit" class="btn btn-danger btn-sm">
+                        <button id="clearBtn" type="submit" class="btn btn-danger btn-sm">
                             Tümünü Temizle
                         </button>
                     </form>
@@ -688,35 +688,28 @@
 @section Scripts {
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const btn = document.getElementById("calculateBtn");
-
-    if (!btn) return;
-
-    const form = btn.closest("form");
-
-    if (!form) return;
-
-    form.addEventListener("submit", function () {
-        btn.disabled = true;
-        btn.innerText = "Hesaplanıyor...";
-    });
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const btn = document.getElementById("calculateBtn");
+    const calcBtn = document.getElementById("calculateBtn");
+    const clearBtn = document.getElementById("clearBtn");
     const spinner = document.getElementById("loadingSpinner");
 
-    if (!btn || !spinner) return;
+    if (!calcBtn || !spinner) return;
 
-    const form = btn.closest("form");
-    if (!form) return;
+    const calcForm = calcBtn.closest("form");
+    if (!calcForm) return;
 
-    form.addEventListener("submit", function () {
-        btn.disabled = true;
-        btn.innerText = "Hesaplanıyor...";
+    calcForm.addEventListener("submit", function () {
+        // Disable calculate
+        calcBtn.disabled = true;
+        calcBtn.innerText = "Hesaplanıyor...";
+
+        // Disable clear (if exists)
+        if (clearBtn) {
+            clearBtn.disabled = true;
+        }
+
+        // Show spinner
         spinner.classList.remove("d-none");
     });
 });
 </script>
-
 }
